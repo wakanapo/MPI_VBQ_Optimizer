@@ -12,7 +12,7 @@
 #include "protos/genom.pb.h"
 #include "protos/genom.grpc.pb.h"
 
-int Communicator::mpiRecever(int buffer_size) {
+int Communicator::mpiReceiver(int buffer_size) {
   arr_.resize(buffer_size);
   MPI_Status status;
   MPI_Recv(arr_.data(), buffer_size, MPI_FLOAT,
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
                                grpc::InsecureChannelCredentials()));
   Communicator comm(std::move(client));
   while(1) {
-    int tag = comm.mpiRecever(std::atoi(argv[1]));
+    int tag = comm.mpiReceiver(std::atoi(argv[1]));
     if (tag == 0)
       break;
     comm.grpcSender();
