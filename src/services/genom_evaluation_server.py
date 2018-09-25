@@ -24,12 +24,13 @@ g_W = []
 
 def converter(partition):
     def f(arr):
-        arr = np.asarray(arr)
+        rep_v = arr
+        partition = np.array([(rep_v[i] + rep_v[i+1]) / 2 for i in range(len(rep_v)-1)])
         end_idx = len(partition) - 1
         for i in range(end_idx):
-            arr[(arr > partition[i]) & (arr <= partition[i+1])] = (partition[i] + partition[i + 1]) /  2
-        arr[arr <= partition[0]] = partition[0]
-        arr[arr > partition[end_idx]] = partition[end_idx]
+            arr[(arr > partition[i]) & (arr <= partition[i+1])] = rep_v[i+1]
+        arr[arr <= partition[0]] = rep_v[0]
+        arr[arr > partition[end_idx]] = rep_v[end_idx+1]
         return arr
     return f
 
