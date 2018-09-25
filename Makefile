@@ -1,4 +1,4 @@
-CXX := g++
+CXX := mpic++
 PROTOC := protoc
 CXXFLAGS := -std=c++11 -g3 -Wall -Wextra -O2 -pthread `pkg-config --cflags protobuf grpc++`
 LDFLAGS := `pkg-config --libs protobuf grpc grpc++`
@@ -11,21 +11,30 @@ PROTODIR := src/protos
 include src/include.mk
 
 UTILS := $(wildcard src/util/*.cc)
-SRCS := $(wildcard src/client/*.cc) $(UTILS) $(PROTO_MESSAGES:%.proto=%.pb.cc) $(PROTO_SERVICES:%.proto=%.grpc.pb.cc)
+C_SRCS := $(wildcard src/client/*.cc) $(UTILS) $(PROTO_MESSAGES:%.proto=%.pb.cc) $(PROTO_SERVICES:%.proto=%.grpc.pb.cc)
+S_SRCS := $(wildcard src/services/*.cc) $(UTILS) $(PROTO_MESSAGES:%.proto=%.pb.cc) $(PROTO_SERVICES:%.proto=%.grpc.pb.cc)
 
 PROTO_HEADERS := $(PROTO_MESSAGES:%.proto=%.pb.h) $(PROTO_SERVICES:%.proto=%.grpc.pb.h)
 
-OBJS := $(SRCS:%.cc=$(OBJDIR)/%.o)
-DEPS := $(SRCS:%.cc=$(OBJDIR)/%.d)
+C_OBJS := $(C_SRCS:%.cc=$(OBJDIR)/%.o)
+C_DEPS := $(C_SRCS:%.cc=$(OBJDIR)/%.d)
+S_OBJS := $(S_SRCS:%.cc=$(OBJDIR)/%.o)
+S_DEPS := $(S_SRCS:%.cc=$(OBJDIR)/%.d)
 
 .PHONY: all
-all: client
+all: client server
 
 .PHONY: client
 client: $(BINDIR)/client
 
-$(BINDIR)/client: $(OBJS) $(BINDIR)
-	$(CXX) -o $@ $(OBJS) $(LDFLAGS)
+.PHONY: server
+server: $(BINDIR)/server
+
+$(BINDIR)/client: $(C_OBJS) $(BINDIR)
+	$(CXX) -o $@ $(C_OBJS) $(LDFLAGS)
+
+$(BINDIR)/server: $(S_OBJS) $(BINDIR)
+	$(CXX) -o $@ $(S_OBJS) $(LDFLAGS)
 
 $(OBJDIR)/%.o: %.cc $(PROTO_HEADERS)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
@@ -46,4 +55,4 @@ $(BINDIR):
 clean:
 	rm -rf $(BINDIR) $(OBJDIR) $(PROTODIR)/*.pb.*
 
--include $(DEPS)
+-include $(C_DEPS) $(S_DEPS)

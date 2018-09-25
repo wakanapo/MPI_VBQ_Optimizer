@@ -1,12 +1,14 @@
 #pragma once
-#include "evaluate_server.hpp"
+
+#include <string>
+#include <vector>
 
 class Genom {
 public:
   Genom(std::vector<float> genom_list, float evaluation):
     genom_list_(std::move(genom_list)), evaluation_(evaluation) {
   };
-  std::vector<float> getGenom() const { return genom_list_; };
+  const std::vector<float>& getGenom() const { return genom_list_; };
   float getEvaluation() const { return evaluation_; };
   float getRandomEvaluation() const { return random_evaluation_; };
   void setGenom(std::vector<float> genom_list) { genom_list_ = genom_list; };
@@ -26,7 +28,8 @@ public:
   Genom mutation(const Genom& parent) const;
   void nextGenerationGeneCreate();
   int randomGenomIndex() const;
-  void run(std::string filename, GenomEvaluationClient client);
+  void GenomEvaluation(int size);
+  void run(std::string filename);
   void save(std::string filepath);
   void print(int i, std::string filepath);
 private:

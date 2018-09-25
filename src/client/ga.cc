@@ -7,23 +7,16 @@
 #include <iostream>
 #include <random>
 #include <sstream>
-#include <string>
 #include <sys/stat.h>
 #include <thread>
-#include <vector>
 
-#include <grpc/grpc.h>
-#include <grpcpp/channel.h>
-#include <grpcpp/client_context.h>
-#include <grpcpp/create_channel.h>
-#include <grpcpp/security/credentials.h>
+#include <mpi.h>
 
 #include "ga.hpp"
 #include "util/color.hpp"
 #include "util/flags.hpp"
 #include "util/timer.hpp"
 #include "protos/genom.pb.h"
-#include "protos/genom.grpc.pb.h"
 
 std::random_device seed;
 std::mt19937 mt(seed());
@@ -151,7 +144,8 @@ void GeneticAlgorithm::nextGenerationGeneCreate() {
   std::uniform_real_distribution<> rand(0.0, mutation_rate_ + cross_rate_);
   std::vector<Genom> new_genoms;
   new_genoms.reserve(genom_num_);
-  
+
+  /* 再生 */
   int reproduce_genom_num = (int) genom_num_ * (1 - mutation_rate_ - cross_rate_);
   for (int i = 0; i < reproduce_genom_num; ++i)
     new_genoms.push_back(genoms_[i]);
@@ -161,12 +155,7 @@ void GeneticAlgorithm::nextGenerationGeneCreate() {
   while ((int)new_genoms.size() < genom_num_) {
     int idx = dist(mt);
     auto r = rand(mt);
-    // /* 選択 */
-    // if (r > mutation_rate_ + cross_rate_) {
-    //   new_genoms.push_back(genoms_[idx]);
-    //   continue;
-    // }
-
+    
     /* 突然変異 */
     if (r < mutation_rate_) {
       new_genoms.push_back(mutation(genoms_[idx]));
@@ -197,6 +186,32 @@ int GeneticAlgorithm::randomGenomIndex() const{
     r -= ratio;
   }
   return std::rand() % genom_num_;
+}
+
+void GeneticAlgorithm::GenomEvaluation(int size) {
+  int node = 0;
+  std::vector<std::pair<int, int>> targets;
+  /* Genomを送信 */
+  for (int g_id = 0; g_id < genom_num_; ++g_id) {
+    Genom* genom = &genoms_[g_id];
+    if (genom->getEvaluation() <= 0) {
+      int target_rank = node % (size-1) + 1;
+      MPI_Send(genom->getGenom().data(), genom_length_, MPI_FLOAT,
+               target_rank, g_id+1, MPI_COMM_WORLD);
+      targets.push_back({target_rank, g_id});
+      ++node;
+    }
+  }
+  /* Evaluationを受信 */
+  for (const auto& t : targets) {
+    float evaluation;
+    MPI_Recv(&evaluation, 1, MPI_FLOAT, t.first, t.second+1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    genoms_[t.second].setEvaluation(evaluation);
+  }
+  /* RandomEvaluationをセット */
+  for (Genom& genom : genoms_) {
+    genom.setRandomEvaluation();
+  }
 }
 
 void GeneticAlgorithm::print(int i, std::string filepath) {
@@ -240,8 +255,10 @@ void GeneticAlgorithm::save(std::string filename) {
     std::cerr << "Failed to save genoms." << std::endl;
 }
 
-void GeneticAlgorithm::run(std::string filepath, GenomEvaluationClient client) {
+void GeneticAlgorithm::run(std::string filepath) {
   Timer timer;
+  int size;
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
   for (int i = Options::ResumeFrom();
        i < Options::ResumeFrom() + max_generation_; ++i) {
     timer.start();
@@ -251,30 +268,26 @@ void GeneticAlgorithm::run(std::string filepath, GenomEvaluationClient client) {
       nextGenerationGeneCreate();
       std::cerr << coloringText("OK!", GREEN) << std::endl;
     }
-
+    /* 遺伝子の評価 */
     std::cerr << "Evaluating genoms on server ..... " << std::endl;
-    for (Genom& genom: genoms_) {
-      if (genom.getEvaluation() <= 0) {
-        GenomEvaluation::Individual individual;
-        GenomEvaluation::Genom* genes = new GenomEvaluation::Genom();
-        for (auto gene : genom.getGenom()) {
-          genes->mutable_gene()->Add(gene);
-        }
-        client.GetIndividualWithEvaluation(*genes, &individual);
-        genom.setEvaluation(individual.evaluation());
-      }
-      genom.setRandomEvaluation();
-    }
+    GenomEvaluation(size);
     std::cerr << coloringText("Finish Evaluation!", GREEN) << std::endl;
-
+    /* 保存 */
     std::cerr << "Saving generation data ..... ";
     std::stringstream ss;
     ss << std::setw(3) << std::setfill('0') << i;
     save(filepath+"/generation"+ss.str());
     std::cerr << coloringText("OK!", GREEN) << std::endl;
+    
     print(i, filepath);
     timer.show(SEC, "Generation" + std::to_string(i) + "\n");
     timer.save(SEC, filepath+"/log.txt");
+  }
+  /* Server Shutdown */
+  float dummy = 0.0;
+  for (int i = 1; i < size; ++i) {
+    MPI_Send(&dummy, 1, MPI_FLOAT,
+             i, 0, MPI_COMM_WORLD);
   }
 }
 
@@ -305,8 +318,7 @@ int main(int argc, char* argv[]) {
   }
   
   GeneticAlgorithm ga = GeneticAlgorithm::setup(filepath.str());
-  GenomEvaluationClient client(
-    grpc::CreateChannel("localhost:50051",
-                        grpc::InsecureChannelCredentials()));
-  ga.run(filepath.str(), std::move(client));
+  MPI_Init(&argc, &argv);
+  ga.run(filepath.str());
+  MPI_Finalize();
 }

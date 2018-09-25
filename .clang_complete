@@ -1,4 +1,5 @@
 -std=c++14
 -I./src
+-I/usr/include/mpi
 -I/home/wakana/googletest-master/googletest/include
 -L/home/wakana/googletest-master/build/googlemock/gtest
