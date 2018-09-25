@@ -11,6 +11,7 @@ GetIndividualWithEvaluation(const GenomEvaluation::Genom& genom,
   if (!status.ok()) {
     std::cerr << coloringText("ERROR:", RED)
               << "GetIndividual rpc faild." << std::endl;
+    std::cerr << status.error_code() << ": " << status.error_message() << std::endl;
     return false;
   }
   if (!individual->has_genom()) {

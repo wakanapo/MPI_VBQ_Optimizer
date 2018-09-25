@@ -12,7 +12,7 @@ def non_blocking_read(output):
     except:
         return ""
 
-def run(genom_name, model_name, quantize_layer):
+def run(genom_name, model_name, quantize_layer, node_num, genom_num):
     server = subprocess.Popen('python src/services/genom_evaluation_server.py {} {}'.format(model_name, quantize_layer),
                             shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     while True:
@@ -26,7 +26,7 @@ def run(genom_name, model_name, quantize_layer):
             return
         
     for _ in range(1):
-        client = subprocess.Popen('./bin/client {} {} {}'.format(genom_name, model_name, quantize_layer), shell=True,
+        client = subprocess.Popen('mpiexec -np 1 ./bin/client {} {} {} : -np {} ./bin/server {}'.format(genom_name, model_name, quantize_layer, int(node_num)-1, genom_num), shell=True,
                                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         while True:
             s_line = non_blocking_read(server.stdout)
@@ -46,8 +46,9 @@ def run(genom_name, model_name, quantize_layer):
         
 if __name__=='__main__':
     argv = sys.argv
-    if len(argv) != 4:
-        print('Usage: python ga_executor.py <genom name> <model name> <quantize_layer>')
+    if len(argv) != 6:
+        print('Usage: python ga_executor.py <genom name> <model name> \
+        <quantize_layer> <node_num> <genom_length>')
         exit()
-    run(argv[1], argv[2], argv[3])
+    run(argv[1], argv[2], argv[3], argv[4], argv[5])
 
