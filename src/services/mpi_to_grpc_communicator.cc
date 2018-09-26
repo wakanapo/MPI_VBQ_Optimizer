@@ -1,4 +1,9 @@
 #include <iostream>
+#include <cstdio>
+#include <cstdlib>
+#include <string>
+#include <sstream>
+#include <ext/stdio_filebuf.h>
 
 #include <mpi.h>
 #include <grpc/grpc.h>
@@ -34,21 +39,34 @@ void Communicator::mpiSender(int tag) {
   MPI_Send(&val_, 1, MPI_FLOAT, 0, tag, MPI_COMM_WORLD);
 }
 
-int main(int argc, char* argv[]) {
-  if (argc < 2) {
-    std::cerr << "Usage: ./server <genom_length>" << std::endl;
+void server(std::string model_name, int quantize_layer, int genom_length) {
+  FILE* fp;
+  std::stringstream command;
+  command << "python src/services/genom_evaluation_server.py "
+          << model_name << " " << quantize_layer;
+  if ((fp = popen(command.str().c_str(), "r")) == NULL) {
+    std::cerr << "Failed to build server." << std::endl;
     exit(1);
   }
-  MPI_Init(&argc, &argv);
+  __gnu_cxx::stdio_filebuf<char> *p_fb =
+    new __gnu_cxx::stdio_filebuf<char>(fp, std::ios_base::in);
+  std::istream input(static_cast<std::streambuf*>(p_fb));
+  std::string line;
+  while (!input.eof()) {
+    getline(input, line);
+    std::cout << line;
+    if (line == "Server Ready\n")
+      break;
+  }
   GenomEvaluationClient client(grpc::CreateChannel("localhost:50051",
                                grpc::InsecureChannelCredentials()));
   Communicator comm(std::move(client));
   while(1) {
-    int tag = comm.mpiReceiver(std::atoi(argv[1]));
+    int tag = comm.mpiReceiver(genom_length);
     if (tag == 0)
       break;
     comm.grpcSender();
     comm.mpiSender(tag);
   }
-  MPI_Finalize();
 }
+

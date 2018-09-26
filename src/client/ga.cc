@@ -188,7 +188,7 @@ int GeneticAlgorithm::randomGenomIndex() const{
   return std::rand() % genom_num_;
 }
 
-void GeneticAlgorithm::GenomEvaluation(int size) {
+void GeneticAlgorithm::genomEvaluation(int size) {
   int node = 0;
   std::vector<std::pair<int, int>> targets;
   /* Genomを送信 */
@@ -270,7 +270,7 @@ void GeneticAlgorithm::run(std::string filepath) {
     }
     /* 遺伝子の評価 */
     std::cerr << "Evaluating genoms on server ..... " << std::endl;
-    GenomEvaluation(size);
+    genomEvaluation(size);
     std::cerr << coloringText("Finish Evaluation!", GREEN) << std::endl;
     /* 保存 */
     std::cerr << "Saving generation data ..... ";
@@ -291,34 +291,6 @@ void GeneticAlgorithm::run(std::string filepath) {
   }
 }
 
-std::string timestamp() {
-  std::time_t t = time(NULL);
-  const tm* lt = localtime(&t);
-  std::stringstream ss;
-  ss << std::setw(2) << std::setfill('0') << lt->tm_mon+1;
-  ss << std::setw(2) << std::setfill('0') << lt->tm_mday;
-  ss << std::setw(2) << std::setfill('0') << lt->tm_hour;
-  ss << std::setw(2) << std::setfill('0') << lt->tm_min;
-  ss << std::setw(2) << std::setfill('0') << lt->tm_sec;
-  return ss.str();
-}
-
-int main(int argc, char* argv[]) {
-  if (argc < 4) {
-    std::cerr << "Usage: ./bin/ga first_genom_file model_name quantize_layer" << std::endl;
-    return 1;
-  }
-  Options::ParseCommandLine(argc, argv);
-  std::stringstream filepath;
-  if (Options::ResumeEnable()) {
-    filepath << "data/" << argv[1];
-  } else {
-    filepath << "data/" << argv[2] << "_" << argv[1] << "_"<< argv[3] << "_" << timestamp();
-    mkdir(filepath.str().c_str(), 0777);
-  }
-  
-  GeneticAlgorithm ga = GeneticAlgorithm::setup(filepath.str());
-  MPI_Init(&argc, &argv);
-  ga.run(filepath.str());
-  MPI_Finalize();
+void client(std::string filepath, GeneticAlgorithm&& ga){
+  ga.run(filepath);
 }

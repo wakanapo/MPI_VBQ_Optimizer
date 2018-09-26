@@ -11,30 +11,21 @@ PROTODIR := src/protos
 include src/include.mk
 
 UTILS := $(wildcard src/util/*.cc)
-C_SRCS := $(wildcard src/client/*.cc) $(UTILS) $(PROTO_MESSAGES:%.proto=%.pb.cc) $(PROTO_SERVICES:%.proto=%.grpc.pb.cc)
-S_SRCS := $(wildcard src/services/*.cc) $(UTILS) $(PROTO_MESSAGES:%.proto=%.pb.cc) $(PROTO_SERVICES:%.proto=%.grpc.pb.cc)
+SRCS := src/run.cc $(wildcard src/client/*.cc) $(wildcard src/services/*.cc) $(UTILS) $(PROTO_MESSAGES:%.proto=%.pb.cc) $(PROTO_SERVICES:%.proto=%.grpc.pb.cc)
 
 PROTO_HEADERS := $(PROTO_MESSAGES:%.proto=%.pb.h) $(PROTO_SERVICES:%.proto=%.grpc.pb.h)
 
-C_OBJS := $(C_SRCS:%.cc=$(OBJDIR)/%.o)
-C_DEPS := $(C_SRCS:%.cc=$(OBJDIR)/%.d)
-S_OBJS := $(S_SRCS:%.cc=$(OBJDIR)/%.o)
-S_DEPS := $(S_SRCS:%.cc=$(OBJDIR)/%.d)
+OBJS := $(SRCS:%.cc=$(OBJDIR)/%.o)
+DEPS := $(SRCS:%.cc=$(OBJDIR)/%.d)
 
 .PHONY: all
-all: client server
+all: mpi
 
-.PHONY: client
-client: $(BINDIR)/client
+.PHONY: mpi
+mpi: $(BINDIR)/mpi
 
-.PHONY: server
-server: $(BINDIR)/server
-
-$(BINDIR)/client: $(C_OBJS) $(BINDIR)
-	$(CXX) -o $@ $(C_OBJS) $(LDFLAGS)
-
-$(BINDIR)/server: $(S_OBJS) $(BINDIR)
-	$(CXX) -o $@ $(S_OBJS) $(LDFLAGS)
+$(BINDIR)/mpi: $(OBJS) $(BINDIR)
+	$(CXX) -o $@ $(OBJS) $(LDFLAGS)
 
 $(OBJDIR)/%.o: %.cc $(PROTO_HEADERS)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
@@ -55,4 +46,4 @@ $(BINDIR):
 clean:
 	rm -rf $(BINDIR) $(OBJDIR) $(PROTODIR)/*.pb.*
 
--include $(C_DEPS) $(S_DEPS)
+-include $(DEPS)

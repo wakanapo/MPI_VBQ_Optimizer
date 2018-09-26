@@ -14,3 +14,5 @@ private:
   float val_;
   GenomEvaluationClient client_;
 };
+
+void server(std::string model_name, int quantize_layer, int genom_length);

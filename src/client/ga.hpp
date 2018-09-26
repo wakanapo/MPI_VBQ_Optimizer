@@ -28,10 +28,11 @@ public:
   Genom mutation(const Genom& parent) const;
   void nextGenerationGeneCreate();
   int randomGenomIndex() const;
-  void GenomEvaluation(int size);
+  void genomEvaluation(int size);
   void run(std::string filename);
   void save(std::string filepath);
   void print(int i, std::string filepath);
+  int getGenomLength() {return genom_length_;};
 private:
   GeneticAlgorithm(int genom_length, int genom_num, float cross_rate,
                    float mutation_rate, int max_generation)
@@ -47,3 +48,5 @@ private:
   void moveGenoms(std::vector<Genom>&& genom);
   std::vector<Genom> genoms_;
 };
+
+void client(std::string filepath, GeneticAlgorithm&& ga);
