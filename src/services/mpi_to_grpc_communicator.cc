@@ -55,9 +55,10 @@ void server(std::string model_name, int quantize_layer, int genom_length) {
   while (!input.eof()) {
     getline(input, line);
     std::cout << line;
-    if (line == "Server Ready\n")
+    if (line == "Server Ready")
       break;
   }
+  std::cerr << "Complete buid server." << std::endl;
   GenomEvaluationClient client(grpc::CreateChannel("localhost:50051",
                                grpc::InsecureChannelCredentials()));
   Communicator comm(std::move(client));
