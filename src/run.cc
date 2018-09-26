@@ -8,7 +8,7 @@
 #include "client/ga.hpp"
 #include "services/mpi_to_grpc_communicator.hpp"
 #include "util/flags.hpp"
-#include "util/timer.hpp"
+#include "util/util.hpp"
 
 int main(int argc, char* argv[]) {
   if (argc < 4) {
@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
     filepath << "data/" << first_genom_file;
   } else {
     filepath << "data/" << model_name << "_"
-             << first_genom_file << "_" << quantize_layer << "_" << Timer::stamp();
+             << first_genom_file << "_" << quantize_layer << "_" << timestamp();
     mkdir(filepath.str().c_str(), 0777);
   }
   GeneticAlgorithm ga = GeneticAlgorithm::setup(filepath.str());

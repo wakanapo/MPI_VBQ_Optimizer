@@ -1,7 +1,5 @@
 #include <iostream>
-#include <iomanip>
 #include <fstream>
-#include <sstream>
 
 #include "util/timer.hpp"
 
@@ -38,16 +36,4 @@ void Timer::save(TimeUnit tu, std::string filename) {
     ofs << std::chrono::duration_cast<std::chrono::seconds>(diff).count()
               << " sec.";
   ofs << std::endl;
-}
-
-std::string Timer::stamp() {
-  std::time_t t = time(NULL);
-  const tm* lt = localtime(&t);
-  std::stringstream ss;
-  ss << std::setw(2) << std::setfill('0') << lt->tm_mon+1;
-  ss << std::setw(2) << std::setfill('0') << lt->tm_mday;
-  ss << std::setw(2) << std::setfill('0') << lt->tm_hour;
-  ss << std::setw(2) << std::setfill('0') << lt->tm_min;
-  ss << std::setw(2) << std::setfill('0') << lt->tm_sec;
-  return ss.str();
 }

@@ -76,6 +76,7 @@ def model_selector(model_name, weights=True):
     return model
 
 def calculate_fitness(genom, model_name, quantize_layer):
+    return 0.3
     with K.get_session().graph.as_default():
         print("start evaluation!")
         model = model_selector(model_name, weights=False)
@@ -106,7 +107,7 @@ class GenomEvaluationServicer(genom_pb2_grpc.GenomEvaluationServicer):
                                     evaluation=calculate_fitness(request,
                                                                  self.genom_name_, self.quantize_layer_))
 
-def serve(model_name, quantize_layer):
+def server(model_name, quantize_layer):
     global val_X, val_y, g_W
     val_X, val_y = data_selector(model_name)
     print("data load: success.")
@@ -131,5 +132,5 @@ if __name__=='__main__':
     if len(argv) < 3:
         print("Please set model name and quantize layer.")
         exit()
-    serve(argv[1], int(argv[2]))
+    server(argv[1], int(argv[2]))
 

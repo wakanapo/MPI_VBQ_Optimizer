@@ -289,6 +289,7 @@ void GeneticAlgorithm::run(std::string filepath) {
     MPI_Send(&dummy, 1, MPI_FLOAT,
              i, 0, MPI_COMM_WORLD);
   }
+  std::cerr << "Client Finish." << std::endl;
 }
 
 void client(std::string filepath, GeneticAlgorithm&& ga){
