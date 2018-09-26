@@ -12,6 +12,11 @@ def non_blocking_read(output):
     except:
         return ""
 
+def get_first_node(filename):
+    with open(filename, 'r') as f:
+        line = f.readline()
+        return line.split()[0]
+
 def run(genom_name, model_name, quantize_layer, node_num, genom_num):
     server = subprocess.Popen('python src/services/genom_evaluation_server.py {} {}'.format(model_name, quantize_layer),
                             shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -25,21 +30,31 @@ def run(genom_name, model_name, quantize_layer, node_num, genom_num):
             print('Server Error.')
             return
         
-    for _ in range(1):
+    hostname = os.uname()[1]
+    client_node = get_first_node(os.environ['GA_HOSTFILE'])
+    if hostname in client_node or client_node in hostname:
         client = subprocess.Popen('mpiexec -np 1 ./bin/client {} {} {} : -np {} ./bin/server {}'.format(genom_name, model_name, quantize_layer, int(node_num)-1, genom_num), shell=True,
                                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         while True:
             s_line = non_blocking_read(server.stdout)
             c_line = non_blocking_read(client.stdout)
             if s_line:
-                sys.stdout.write(s_line.decode('utf-8'))
+                sys.stdout.write("{}: {}".format(hostname, s_line.decode('utf-8')))
             elif server.poll() is not None:
                 print('Server Error.')
                 return
             if c_line:
-                sys.stdout.write(c_line.decode('utf-8'))
+                sys.stdout.write("client: {}".format(c_line.decode('utf-8')))
             elif client.poll() is not None:
                 break
+    else:
+        while True:
+            s_line = non_blocking_read(server.stdout)
+            if s_line:
+                sys.stdout.write("{}: {}".format(hostname, s_line.decode('utf-8')))
+            elif server.poll() is not None:
+                print('Server Error.')
+                return
 
     server.kill()
 
