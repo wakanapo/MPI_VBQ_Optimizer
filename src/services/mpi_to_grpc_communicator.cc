@@ -76,7 +76,6 @@ void server(std::string model_name, int quantize_layer, int genom_length) {
   Communicator comm(std::move(client));
   while(1) {
     int tag = comm.mpiReceiver(genom_length);
-    std::cout << tag << std::endl;
     if (tag == 0)
       break;
     comm.grpcSender();

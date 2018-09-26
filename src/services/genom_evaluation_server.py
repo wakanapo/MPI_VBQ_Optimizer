@@ -76,7 +76,6 @@ def model_selector(model_name, weights=True):
     return model
 
 def calculate_fitness(genom, model_name, quantize_layer):
-    return 0.3
     with K.get_session().graph.as_default():
         print("start evaluation!")
         model = model_selector(model_name, weights=False)

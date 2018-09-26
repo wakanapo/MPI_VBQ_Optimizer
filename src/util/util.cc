@@ -33,7 +33,7 @@ FILE* popen2(std::string command, std::string type, int* pid) {
       close(fd[WRITE]);    //Close the WRITE end of the pipe since the child's fd is read-only
       dup2(fd[READ], 0);   //Redirect stdin to pipe
     }
-    setpgid(child_pid, child_pid); //Needed so negative PIDs can kill children of /bin/sh
+    setpgid(0, 0); //Needed so negative PIDs can kill children of /bin/sh
     execl("/bin/sh", "/bin/sh", "-c", command.c_str(), NULL);
     exit(0);
   } else {
@@ -43,7 +43,6 @@ FILE* popen2(std::string command, std::string type, int* pid) {
       close(fd[READ]); //Close the READ end of the pipe since parent's fd is write-only
     }
   }
-
   *pid = child_pid;
   if (type == "r")
     return fdopen(fd[READ], "r");
@@ -65,7 +64,7 @@ int pclose2(FILE* fp, pid_t pid) {
 int pkill(FILE* fp, pid_t pid) {
   int stat;
   fclose(fp);
-  kill(pid, SIGKILL);
+  killpg(getpgid(pid), SIGINT);
   while (waitpid(pid, &stat, 0) == -1) {
     if (errno != EINTR) {
       stat = -1;
