@@ -35,8 +35,8 @@ void Communicator::grpcSender() {
   }
   int cnt = 0;
   while(!client_.GetIndividualWithEvaluation(*genes, &individual)) {
-    if (cnt == 30) {
-      std::cerr << "Tried 30 times, but gRPC Failed." << std::endl;
+    if (cnt == 10) {
+      std::cerr << "Tried 10 times, but gRPC Failed." << std::endl;
       exit(1);
     }
     ++cnt;
