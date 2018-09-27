@@ -7,7 +7,7 @@ class Communicator {
 public:
   Communicator(GenomEvaluationClient client) : client_(std::move(client)) {};
   int mpiReceiver(int buffer_size);
-  void grpcSender();
+  int grpcSender();
   void mpiSender(int tag);
 private:
   std::vector<float> arr_;

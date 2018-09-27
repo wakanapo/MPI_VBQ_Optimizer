@@ -27,7 +27,7 @@ int Communicator::mpiReceiver(int buffer_size) {
   return status.MPI_TAG;
 }
 
-void Communicator::grpcSender() {
+int Communicator::grpcSender() {
   GenomEvaluation::Individual individual;
   GenomEvaluation::Genom* genes = new GenomEvaluation::Genom();
   for (float v : arr_) {
@@ -37,13 +37,14 @@ void Communicator::grpcSender() {
   while(!client_.GetIndividualWithEvaluation(*genes, &individual)) {
     if (cnt == 10) {
       std::cerr << "Tried 10 times, but gRPC Failed." << std::endl;
-      exit(1);
+      return -1;
     }
     ++cnt;
   }
   if (cnt != 0)
     std::cerr << "Success retry." << std::endl;
   val_ = individual.evaluation();
+  return 0;
 }
 
 void Communicator::mpiSender(int tag) {
@@ -78,7 +79,10 @@ void server(std::string model_name, int quantize_layer, int genom_length) {
     int tag = comm.mpiReceiver(genom_length);
     if (tag == 0)
       break;
-    comm.grpcSender();
+    if (comm.grpcSender() < 0) {
+      pkill(fp, p_id);
+      exit(1);
+    };
     comm.mpiSender(tag);
   }
   pkill(fp, p_id);
