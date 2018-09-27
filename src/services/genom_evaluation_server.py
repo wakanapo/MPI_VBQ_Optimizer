@@ -8,72 +8,18 @@ sys.path.append(pwd+'/src/protos')
 import genom_pb2
 import genom_pb2_grpc
 import grpc
-from keras.applications import vgg16, resnet50
 from keras import backend as K
 from keras import optimizers
 import numpy as np
 import tensorflow as tf
 
-import cifar10
-import imagenet
+from selector import data_selector, model_selector
+from converter import converter
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 val_X = []
 val_y = []
 g_W = []
-
-def converter(partition):
-    def f(arr):
-        rep_v = arr.flatten()
-        partition = np.array([(rep_v[i] + rep_v[i+1]) / 2 for i in range(len(rep_v)-1)])
-        end_idx = len(partition) - 1
-        for i in range(end_idx):
-            arr[(arr > partition[i]) & (arr <= partition[i+1])] = rep_v[i+1]
-        arr[arr <= partition[0]] = rep_v[0]
-        arr[arr > partition[end_idx]] = rep_v[end_idx+1]
-        return arr
-    return f
-
-def data_selector(model_name):
-    if model_name == 'vgg_like' or model_name == 'hinton':
-        _, _, val_X, val_y = cifar10.read_data()
-    else:
-        val_X, val_y = imagenet.load()
-        if model_name == 'vgg16':
-            val_X = vgg16.preprocess_input(val_X)
-        elif model_name == 'resnet50':
-            val_X = resnet50.preprocess_input(val_X)
-    return val_X, val_y
-
-def model_selector(model_name, weights=True):
-    model = None
-    if model_name == 'vgg_like' or model_name == 'hinton':
-        if model_name == 'vgg_like':
-            model_class = cifar10.Vgg_like();
-            print("Model: vgg_like")
-        else:
-            model_class = cifar10.Hinton();
-            print("Model: hinton")
-        model = model_class.build((32, 32, 3))
-        if weights:
-            model.load_weights('data/'+model_class.name+'.h5')
-            print("load weights: success.")
-    else:
-        if model_name == 'vgg16':
-            print("Model: vgg16")
-            if weights:
-                model = vgg16.VGG16(weights='data/vgg16_retraining.h5')
-                print("load weights: success.")
-            else:
-                model = vgg16.VGG16(weights=None)
-        elif model_name == 'resnet50':
-            print("Model: resnet50")
-            if weights:
-                model = resnet50.ResNet50(weights='data/resnet50_retraining.h5')
-                print("load weights: success")
-            else:
-                model = resnet50.ResNet50(weights=None)
-    return model
 
 def calculate_fitness(genom, model_name, quantize_layer):
     with K.get_session().graph.as_default():
@@ -113,13 +59,13 @@ def server(model_name, quantize_layer):
     model = model_selector(model_name, weights=True)
     g_W = model.get_weights()
     print("model load: success.")
-    print("Server Ready")
-    sys.stdout.flush()
     server = grpc.server(futures.ThreadPoolExecutor())
     genom_pb2_grpc.add_GenomEvaluationServicer_to_server(
         GenomEvaluationServicer(model_name, quantize_layer), server)
     server.add_insecure_port('[::]:50051')
     server.start()
+    print("Server Ready")
+    sys.stdout.flush()
     try:
         while True:
             time.sleep(_ONE_DAY_IN_SECONDS)
@@ -132,4 +78,3 @@ if __name__=='__main__':
         print("Please set model name and quantize layer.")
         exit()
     server(argv[1], int(argv[2]))
-
