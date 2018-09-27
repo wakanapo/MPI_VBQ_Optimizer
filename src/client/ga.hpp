@@ -49,4 +49,4 @@ private:
   std::vector<Genom> genoms_;
 };
 
-void client(std::string filepath, GeneticAlgorithm&& ga);
+void client(std::string filepath);

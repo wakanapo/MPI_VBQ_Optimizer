@@ -19,10 +19,14 @@
 #include "protos/genom.grpc.pb.h"
 #include "util/util.hpp"
 
-int Communicator::mpiReceiver(int buffer_size) {
-  arr_.resize(buffer_size);
+void Communicator::getBufferSize() {
+  MPI_Bcast(&buffer_size_, 1, MPI_INT, 0, MPI_COMM_WORLD);
+}
+
+int Communicator::mpiReceiver() {
+  arr_.resize(buffer_size_);
   MPI_Status status;
-  MPI_Recv(arr_.data(), buffer_size, MPI_FLOAT,
+  MPI_Recv(arr_.data(), buffer_size_, MPI_FLOAT,
            0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
   return status.MPI_TAG;
 }
@@ -51,7 +55,7 @@ void Communicator::mpiSender(int tag) {
   MPI_Send(&val_, 1, MPI_FLOAT, 0, tag, MPI_COMM_WORLD);
 }
 
-void server(std::string model_name, int quantize_layer, int genom_length) {
+void server(std::string model_name, int quantize_layer) {
   FILE* fp;
   int p_id;
   std::stringstream command;
@@ -75,8 +79,9 @@ void server(std::string model_name, int quantize_layer, int genom_length) {
   GenomEvaluationClient client(grpc::CreateChannel("localhost:50051",
                                grpc::InsecureChannelCredentials()));
   Communicator comm(std::move(client));
+  comm.getBufferSize();
   while(1) {
-    int tag = comm.mpiReceiver(genom_length);
+    int tag = comm.mpiReceiver();
     if (tag == 0)
       break;
     if (comm.grpcSender() < 0) {

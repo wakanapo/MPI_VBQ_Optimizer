@@ -43,7 +43,7 @@ GeneticAlgorithm GeneticAlgorithm::setup(std::string filepath) {
                       generation.individuals_size(),
                       Options::GetCrossRate(),Options::GetMutationRate(),
                       Options::GetMaxGeneration());
-
+  MPI_Bcast(&ga.genom_length_, 1, MPI_INT, 0, MPI_COMM_WORLD);
   if (!Options::ResumeEnable()) {
     std::ofstream ofs(filepath+"/metadata.txt", std::ios::app);
     ofs << "Genom Length: " << ga.genom_length_ << std::endl;
@@ -256,9 +256,9 @@ void GeneticAlgorithm::save(std::string filename) {
 }
 
 void GeneticAlgorithm::run(std::string filepath) {
-  Timer timer;
   int size;
   MPI_Comm_size(MPI_COMM_WORLD, &size);
+  Timer timer;
   for (int i = Options::ResumeFrom();
        i < Options::ResumeFrom() + max_generation_; ++i) {
     timer.start();
@@ -292,6 +292,7 @@ void GeneticAlgorithm::run(std::string filepath) {
   std::cerr << "Client Finish." << std::endl;
 }
 
-void client(std::string filepath, GeneticAlgorithm&& ga){
+void client(std::string filepath){
+  GeneticAlgorithm ga = GeneticAlgorithm::setup(filepath);
   ga.run(filepath);
 }
