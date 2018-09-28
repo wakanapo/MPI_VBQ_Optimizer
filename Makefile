@@ -1,4 +1,4 @@
-CXX := g++
+CXX := mpic++
 PROTOC := protoc
 CXXFLAGS := -std=c++11 -g3 -Wall -Wextra -O2 -pthread `pkg-config --cflags protobuf grpc++`
 LDFLAGS := `pkg-config --libs protobuf grpc grpc++`
@@ -11,7 +11,7 @@ PROTODIR := src/protos
 include src/include.mk
 
 UTILS := $(wildcard src/util/*.cc)
-SRCS := $(wildcard src/client/*.cc) $(UTILS) $(PROTO_MESSAGES:%.proto=%.pb.cc) $(PROTO_SERVICES:%.proto=%.grpc.pb.cc)
+SRCS := src/run.cc $(wildcard src/client/*.cc) $(wildcard src/services/*.cc) $(UTILS) $(PROTO_MESSAGES:%.proto=%.pb.cc) $(PROTO_SERVICES:%.proto=%.grpc.pb.cc)
 
 PROTO_HEADERS := $(PROTO_MESSAGES:%.proto=%.pb.h) $(PROTO_SERVICES:%.proto=%.grpc.pb.h)
 
@@ -19,12 +19,12 @@ OBJS := $(SRCS:%.cc=$(OBJDIR)/%.o)
 DEPS := $(SRCS:%.cc=$(OBJDIR)/%.d)
 
 .PHONY: all
-all: client
+all: mpi
 
-.PHONY: client
-client: $(BINDIR)/client
+.PHONY: mpi
+mpi: $(BINDIR)/mpi
 
-$(BINDIR)/client: $(OBJS) $(BINDIR)
+$(BINDIR)/mpi: $(OBJS) $(BINDIR)
 	$(CXX) -o $@ $(OBJS) $(LDFLAGS)
 
 $(OBJDIR)/%.o: %.cc $(PROTO_HEADERS)
