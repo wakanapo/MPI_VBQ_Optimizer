@@ -52,7 +52,7 @@ class GenomEvaluationServicer(genom_pb2_grpc.GenomEvaluationServicer):
                                     evaluation=calculate_fitness(request,
                                                                  self.genom_name_, self.quantize_layer_))
 
-def server(model_name, quantize_layer):
+def server(model_name, quantize_layer, rank):
     global val_X, val_y, g_W
     val_X, val_y = data_selector(model_name)
     print("data load: success.")
@@ -62,7 +62,8 @@ def server(model_name, quantize_layer):
     server = grpc.server(futures.ThreadPoolExecutor())
     genom_pb2_grpc.add_GenomEvaluationServicer_to_server(
         GenomEvaluationServicer(model_name, quantize_layer), server)
-    server.add_insecure_port('[::]:50051')
+    port = 50050 + rank % 4
+    server.add_insecure_port('[::]:'+str(port))
     server.start()
     print("Server Ready")
     sys.stdout.flush()
@@ -74,7 +75,8 @@ def server(model_name, quantize_layer):
 
 if __name__=='__main__':
     argv = sys.argv
-    if len(argv) < 3:
-        print("Please set model name and quantize layer.")
+    if len(argv) < 4:
+        print("Please set model name, quantize layer and rank.")
         exit()
-    server(argv[1], int(argv[2]))
+    os.environ['CUDA_VISIBLE_DEVICES'] = str(int(argv[3]) % 4);
+    server(argv[1], int(argv[2]), int(argv[3]))

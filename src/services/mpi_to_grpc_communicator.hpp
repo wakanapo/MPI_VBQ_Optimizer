@@ -18,4 +18,4 @@ private:
   GenomEvaluationClient client_;
 };
 
-void server(std::string model_name, int quantize_layer);
+void server(std::string model_name, int quantize_layer, int rank);

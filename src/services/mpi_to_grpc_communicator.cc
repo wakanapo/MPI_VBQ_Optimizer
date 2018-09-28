@@ -39,8 +39,8 @@ int Communicator::grpcSender() {
   }
   int cnt = 0;
   while(!client_.GetIndividualWithEvaluation(*genes, &individual)) {
-    if (cnt == 10) {
-      std::cerr << "Tried 10 times, but gRPC Failed." << std::endl;
+    if (cnt == 5) {
+      std::cerr << "Tried 5 times, but gRPC Failed." << std::endl;
       return -1;
     }
     ++cnt;
@@ -55,12 +55,12 @@ void Communicator::mpiSender(int tag) {
   MPI_Send(&val_, 1, MPI_FLOAT, 0, tag, MPI_COMM_WORLD);
 }
 
-void server(std::string model_name, int quantize_layer) {
+void server(std::string model_name, int quantize_layer, int rank) {
   FILE* fp;
   int p_id;
   std::stringstream command;
   command << "python src/services/genom_evaluation_server.py "
-          << model_name << " " << quantize_layer;
+          << model_name << " " << quantize_layer << " " << rank;
   if ((fp = popen2(command.str(), "r", &p_id)) == NULL) {
     std::cerr << "Failed to build server." << std::endl;
     exit(1);
@@ -76,7 +76,9 @@ void server(std::string model_name, int quantize_layer) {
       break;
   }
   std::cerr << "Complete buid server." << std::endl;
-  GenomEvaluationClient client(grpc::CreateChannel("localhost:50051",
+  int port = 50050 + rank % 4;
+  std::string address = "localhost:" + std::to_string(port);
+  GenomEvaluationClient client(grpc::CreateChannel(address,
                                grpc::InsecureChannelCredentials()));
   Communicator comm(std::move(client));
   comm.getBufferSize();

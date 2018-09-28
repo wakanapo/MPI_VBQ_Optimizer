@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
     }
     client(filepath.str());
   } else {
-    server(model_name, quantize_layer);
+    server(model_name, quantize_layer, rank);
   }
   MPI_Finalize();
   return 0;
