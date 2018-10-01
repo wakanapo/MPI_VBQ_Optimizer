@@ -48,6 +48,10 @@ int Communicator::grpcSender() {
   if (cnt != 0)
     std::cerr << "Success retry." << std::endl;
   val_ = individual.evaluation();
+  if (val_ < 0) {
+    std::cerr << "Python server catch exception." << std::endl;
+    return -1;
+  }
   return 0;
 }
 
@@ -82,7 +86,7 @@ void server(std::string model_name, int quantize_layer, int rank) {
                                grpc::InsecureChannelCredentials()));
   Communicator comm(std::move(client));
   comm.getBufferSize();
-  while(1) {
+  while(pexist(p_id)) {
     int tag = comm.mpiReceiver();
     if (tag == 0)
       break;

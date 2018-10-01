@@ -61,6 +61,12 @@ int pclose2(FILE* fp, pid_t pid) {
   return stat;
 }
 
+bool pexist(pid_t pid) {
+  if (kill(pid, 0) == 0)
+    return true;
+  return false;
+}
+
 int pkill(FILE* fp, pid_t pid) {
   int stat;
   fclose(fp);

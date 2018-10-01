@@ -1,6 +1,9 @@
+import logging
 from keras.applications import vgg16, resnet50
 import cifar10
 import imagenet
+
+logger = logging.getLogger("Selector")
 
 def data_selector(model_name):
     if model_name == 'vgg_like' or model_name == 'hinton':
@@ -18,27 +21,27 @@ def model_selector(model_name, weights=True):
     if model_name == 'vgg_like' or model_name == 'hinton':
         if model_name == 'vgg_like':
             model_class = cifar10.Vgg_like();
-            print("Model: vgg_like")
+            logger.debug("Model: vgg_like")
         else:
             model_class = cifar10.Hinton();
-            print("Model: hinton")
+            logger.debug("Model: hinton")
         model = model_class.build((32, 32, 3))
         if weights:
             model.load_weights('data/'+model_class.name+'.h5')
-            print("load weights: success.")
+            logger.debug("Load weights: success.")
     else:
         if model_name == 'vgg16':
-            print("Model: vgg16")
+            logger.debug("Model: vgg16")
             if weights:
                 model = vgg16.VGG16(weights='data/vgg16_retraining.h5')
-                print("load weights: success.")
+                logger.debug("Load weights: success.")
             else:
                 model = vgg16.VGG16(weights=None)
         elif model_name == 'resnet50':
-            print("Model: resnet50")
+            logger.debug("Model: resnet50")
             if weights:
                 model = resnet50.ResNet50(weights='data/resnet50_retraining.h5')
-                print("load weights: success")
+                logger.debug("Load weights: success")
             else:
                 model = resnet50.ResNet50(weights=None)
     return model
