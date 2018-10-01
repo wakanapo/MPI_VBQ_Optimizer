@@ -21,19 +21,15 @@ val_X = []
 val_y = []
 g_W = []
 
-def calculate_fitness(genom, model_name, quantize_layer):
+def calculate_fitness(genom, model, quantize_layer):
     with K.get_session().graph.as_default():
-        print("start evaluation!")
-        model = model_selector(model_name, weights=False)
         W_q = copy.deepcopy(g_W)
         if quantize_layer == -1:
             W_q[::2] = list(map(converter(genom.gene), W_q[::2]))
-        elif quantize_layer*2 < len(W_q):
+        elif quantize_layer > 0 and quantize_layer*2 < len(W_q):
             W_q[quantize_layer*2] = converter(genom.gene)(W_q[quantize_layer*2])
         else:
-            sys.stderr.write("quantize_layer is out of index.")
-            exit(1)
-        print("quantize: success.")
+            sys.exit("quantize_layer is out of index.")
         model.set_weights(W_q)
         model.compile(optimizer=optimizers.Adam(),
                       loss='categorical_crossentropy',
@@ -44,13 +40,13 @@ def calculate_fitness(genom, model_name, quantize_layer):
 
 class GenomEvaluationServicer(genom_pb2_grpc.GenomEvaluationServicer):
     def __init__(self, genom_name, quantize_layer):
-        self.genom_name_ = genom_name
+        self.model_ = model_
         self.quantize_layer_ = quantize_layer
         
     def GetIndividual(self, request, context):
         return genom_pb2.Individual(genom=request,
                                     evaluation=calculate_fitness(request,
-                                                                 self.genom_name_, self.quantize_layer_))
+                                                                 self.model_, self.quantize_layer_))
 
 def server(model_name, quantize_layer, rank):
     global val_X, val_y, g_W
@@ -61,7 +57,7 @@ def server(model_name, quantize_layer, rank):
     print("model load: success.")
     server = grpc.server(futures.ThreadPoolExecutor())
     genom_pb2_grpc.add_GenomEvaluationServicer_to_server(
-        GenomEvaluationServicer(model_name, quantize_layer), server)
+        GenomEvaluationServicer(model, quantize_layer), server)
     port = 50050 + rank % 4
     server.add_insecure_port('[::]:'+str(port))
     server.start()
@@ -77,6 +73,6 @@ if __name__=='__main__':
     argv = sys.argv
     if len(argv) < 4:
         print("Please set model name, quantize layer and rank.")
-        exit()
+        sys.exit()
     os.environ['CUDA_VISIBLE_DEVICES'] = str(int(argv[3]) % 4);
     server(argv[1], int(argv[2]), int(argv[3]))
