@@ -3,6 +3,7 @@ package GenomEvaluation;
 
 service GenomEvaluation {
   rpc GetIndividual(Genom) returns (Individual) {};
+  rpc GetIndividualMock(Genom) returns (Individual) {};
 }
 
 message Genom {

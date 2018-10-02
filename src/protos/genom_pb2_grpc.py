@@ -19,6 +19,11 @@ class GenomEvaluationStub(object):
         request_serializer=genom__pb2.Genom.SerializeToString,
         response_deserializer=genom__pb2.Individual.FromString,
         )
+    self.GetIndividualMock = channel.unary_unary(
+        '/GenomEvaluation.GenomEvaluation/GetIndividualMock',
+        request_serializer=genom__pb2.Genom.SerializeToString,
+        response_deserializer=genom__pb2.Individual.FromString,
+        )
 
 
 class GenomEvaluationServicer(object):
@@ -32,11 +37,23 @@ class GenomEvaluationServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def GetIndividualMock(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_GenomEvaluationServicer_to_server(servicer, server):
   rpc_method_handlers = {
       'GetIndividual': grpc.unary_unary_rpc_method_handler(
           servicer.GetIndividual,
+          request_deserializer=genom__pb2.Genom.FromString,
+          response_serializer=genom__pb2.Individual.SerializeToString,
+      ),
+      'GetIndividualMock': grpc.unary_unary_rpc_method_handler(
+          servicer.GetIndividualMock,
           request_deserializer=genom__pb2.Genom.FromString,
           response_serializer=genom__pb2.Individual.SerializeToString,
       ),

@@ -60,6 +60,9 @@ class GenomEvaluationServicer(genom_pb2_grpc.GenomEvaluationServicer):
                                                                  self.model_name_,
                                                                  self.quantize_layer_))
 
+    def GetIndividualMock(self, request, context):
+        return genom_pb2.Individual(genom=request, evaluation=0.5)
+
 def server(model_name, quantize_layer, rank):
     global val_X, val_y, g_W
     val_X, val_y = data_selector(model_name)

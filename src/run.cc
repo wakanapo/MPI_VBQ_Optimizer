@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <sys/stat.h>
-#include <mpi.h>
+#include <mpi/mpi.h>
 
 #include "client/ga.hpp"
 #include "services/mpi_to_grpc_communicator.hpp"
@@ -12,7 +12,7 @@
 
 int main(int argc, char* argv[]) {
   if (argc < 4) {
-    std::cerr << "Usage: ./bin/run first_genom_file model_name quantize_layer"
+    std::cerr << "Usage: ./bin/mpi first_genom_file model_name quantize_layer"
               << std::endl;
     return 1;
   }
