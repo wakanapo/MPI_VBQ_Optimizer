@@ -2,6 +2,7 @@ import copy
 import sys
 import numpy as np
 from selector import model_selector, data_selector
+from keras import optimizers
 #from converter import converter
 
 def converter(partition):
