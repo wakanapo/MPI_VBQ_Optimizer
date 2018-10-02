@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='genom.proto',
   package='GenomEvaluation',
   syntax='proto3',
-  serialized_pb=_b('\n\x0bgenom.proto\x12\x0fGenomEvaluation\"\x19\n\x05Genom\x12\x10\n\x04gene\x18\x01 \x03(\x02\x42\x02\x10\x01\"G\n\nIndividual\x12%\n\x05genom\x18\x01 \x01(\x0b\x32\x16.GenomEvaluation.Genom\x12\x12\n\nevaluation\x18\x02 \x01(\x02\">\n\nGeneration\x12\x30\n\x0bindividuals\x18\x01 \x03(\x0b\x32\x1b.GenomEvaluation.Individual2Y\n\x0fGenomEvaluation\x12\x46\n\rGetIndividual\x12\x16.GenomEvaluation.Genom\x1a\x1b.GenomEvaluation.Individual\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x0bgenom.proto\x12\x0fGenomEvaluation\"\x19\n\x05Genom\x12\x10\n\x04gene\x18\x01 \x03(\x02\x42\x02\x10\x01\"G\n\nIndividual\x12%\n\x05genom\x18\x01 \x01(\x0b\x32\x16.GenomEvaluation.Genom\x12\x12\n\nevaluation\x18\x02 \x01(\x02\">\n\nGeneration\x12\x30\n\x0bindividuals\x18\x01 \x03(\x0b\x32\x1b.GenomEvaluation.Individual2\xa5\x01\n\x0fGenomEvaluation\x12\x46\n\rGetIndividual\x12\x16.GenomEvaluation.Genom\x1a\x1b.GenomEvaluation.Individual\"\x00\x12J\n\x11GetIndividualMock\x12\x16.GenomEvaluation.Genom\x1a\x1b.GenomEvaluation.Individual\"\x00\x62\x06proto3')
 )
 
 
@@ -162,13 +162,22 @@ _GENOMEVALUATION = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=196,
-  serialized_end=285,
+  serialized_start=197,
+  serialized_end=362,
   methods=[
   _descriptor.MethodDescriptor(
     name='GetIndividual',
     full_name='GenomEvaluation.GenomEvaluation.GetIndividual',
     index=0,
+    containing_service=None,
+    input_type=_GENOM,
+    output_type=_INDIVIDUAL,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetIndividualMock',
+    full_name='GenomEvaluation.GenomEvaluation.GetIndividualMock',
+    index=1,
     containing_service=None,
     input_type=_GENOM,
     output_type=_INDIVIDUAL,

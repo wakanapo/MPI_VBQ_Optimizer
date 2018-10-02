@@ -2,12 +2,15 @@
 
 #include "evaluate_server.hpp"
 #include "util/color.hpp"
+#include "util/flags.hpp"
 
 bool GenomEvaluationClient::
 GetIndividualWithEvaluation(const GenomEvaluation::Genom& genom,
                             GenomEvaluation::Individual* individual) {
   grpc::ClientContext context;
-  grpc::Status status = stub_->GetIndividual(&context, genom, individual);
+  grpc::Status status = (Options::IsMock()) ?
+    stub_->GetIndividualMock(&context, genom, individual)
+    : stub_->GetIndividual(&context, genom, individual);
   if (!status.ok()) {
     std::cerr << coloringText("ERROR:", RED)
               << "GetIndividual rpc faild." << std::endl;

@@ -10,7 +10,7 @@
 #include <sys/stat.h>
 #include <thread>
 
-#include <mpi.h>
+#include <mpi/mpi.h>
 
 #include "ga.hpp"
 #include "util/color.hpp"
@@ -238,6 +238,17 @@ void GeneticAlgorithm::print(int i, std::string filepath) {
 }
 
 void GeneticAlgorithm::save(std::string filename) {
+  if (Options::IsMock()) {
+    for (auto genom : genoms_) {
+      if (genom.getEvaluation() != 0.5) {
+        std::cout << coloringText("Mock Failed!", RED) << std::endl;
+        return;
+      }
+    }
+    std::cout << coloringText("Mock Success!", GREEN) << std::endl;
+    return;
+  }
+  
   GenomEvaluation::Generation gs;
   for (auto genom : genoms_) {
     GenomEvaluation::Individual* g = gs.add_individuals();

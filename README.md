@@ -27,7 +27,7 @@ $ mkdir data
 $ python src/util/make_first_generation.py 8 50 p8g50 random 
 ```
 
-6. try running the program with downloading Cifer10
+6. run mock
 ```shell
-$ mpirun -n 2 ./bin/mpi p8g50 vgg_like -1
+$ mpirun -n 2 ./bin/mpi p8g50 vgg_like -1 --max_generation=1 --is_mock=true
 ```

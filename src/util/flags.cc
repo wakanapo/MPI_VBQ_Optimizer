@@ -15,6 +15,7 @@ namespace {
   bool g_resume = false;
   int g_resume_from = 0;
   std::string g_first_genom_file;
+  bool g_is_mock = false;
 }  // namespace
 
 int StringToInt(std::string str) {
@@ -23,6 +24,10 @@ int StringToInt(std::string str) {
 
 float StringToFloat(std::string str) {
   return std::stof(str);
+}
+
+bool StringToBool(std::string str) {
+  return (str == "true") ? true : false;
 }
 
 void SetFlag(std::string str, flags_type& flags) {
@@ -44,8 +49,9 @@ void SetFlag(std::string str, flags_type& flags) {
 };
 
 void Options::ParseCommandLine(int argc, char* argv[]) {
-  if (argc < 2) {
-    std::cerr << "Usage ./bin/client <first genom file> <filename>." << std::endl;
+    if (argc < 4) {
+    std::cerr << "Usage: ./bin/mpi first_genom_file model_name quantize_layer"
+              << std::endl;
     exit(1);
   }
 
@@ -59,8 +65,10 @@ void Options::ParseCommandLine(int argc, char* argv[]) {
   flags.insert(std::make_pair("resume_from", [](std::string flag_value) {
         g_resume = true;
         g_resume_from = StringToInt(flag_value);}));
-  if (argc > 4)
-    SetFlag(argv[4], flags);
+  flags.insert(std::make_pair("is_mock", [](std::string flag_value) {
+        g_is_mock = StringToBool(flag_value) ;}));
+  for (int i = 4; i < argc; ++i)
+    SetFlag(argv[i], flags);
   std::stringstream filename;
   if (g_resume) {
     filename << "data/" << argv[1] << "/generation" <<
@@ -93,4 +101,8 @@ int Options::ResumeFrom() {
 
 std::string Options::GetFirstGenomFile() {
   return g_first_genom_file;
+}
+
+bool Options::IsMock() {
+  return g_is_mock;
 }

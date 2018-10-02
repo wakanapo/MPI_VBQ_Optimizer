@@ -11,4 +11,5 @@ public:
   static bool ResumeEnable();
   static int ResumeFrom();
   static std::string GetFirstGenomFile();
+  static bool IsMock();
 };
