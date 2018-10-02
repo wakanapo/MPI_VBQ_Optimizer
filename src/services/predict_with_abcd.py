@@ -19,22 +19,22 @@ class Predict:
     def __init__(self, model_name):
         self.test_X, self.test_y = data_selector(model_name)
         self.model = model_selector(model_name, weights=True)
-        self.g_W = model.get_weights()
+        self.g_W = self.model.get_weights()
 
     def run(self, partition, quantize_layer):
         W_q = copy.deepcopy(self.g_W)
         if quantize_layer == -1:
             W_q[::2] = list(map(converter(partition), W_q[::2]))
-        elif quantize_layer > 0 and quantize_layer*2 < len(W_q):
+        elif quantize_layer >= 0 and quantize_layer*2 < len(W_q):
             W_q[quantize_layer*2] = converter(partition)(W_q[quantize_layer*2])
         else:
             sys.exit("quantize_layer is out of index.")
-            model.set_weights(W_q)
-            model.compile(optimizer=optimizers.Adam(),
-                          loss='categorical_crossentropy',
-                          metrics=['accuracy'])
-            score = model.evaluate(val_X, val_y, verbose=0)
-            return score[1]
+        self.model.set_weights(W_q)
+        self.model.compile(optimizer=optimizers.Adam(),
+                        loss='categorical_crossentropy',
+                        metrics=['accuracy'])
+        score = self.model.evaluate(self.test_X, self.test_y, verbose=0)
+        return score[1]
 
 def get_partition_from_abcd(p_num, a, b, c, d):
     x = np.arange(p_num) / p_num
@@ -48,12 +48,13 @@ if __name__=='__main__':
     argv = sys.argv
     if len(argv) < 4:
         print("Usage: pythono predict_with_abcd.py <model_name> <abcd_file> <partition_num>")
-    predict = Predict(argv[1])
+#    predict = Predict(argv[1])
     with open(argv[2], 'r') as f:
         lines = f.readlines()
     for line in lines:
         data = list(map(float, line.split(',')))
         partition = get_partition_from_abcd(int(argv[3]), data[1], data[2],
                                             data[3], data[4])
-        acc = predict.run(partition, int(data[0]))
-        print("Layer {}: {}", int(data[0]), acc)
+        q_layer = int(data[0])
+        acc = predict.run(partition, q_layer)
+        print("Layer {}: {}".format(q_layer, acc))
