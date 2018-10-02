@@ -48,7 +48,7 @@ if __name__=='__main__':
     argv = sys.argv
     if len(argv) < 4:
         print("Usage: pythono predict_with_abcd.py <model_name> <abcd_file> <partition_num>")
-#    predict = Predict(argv[1])
+    predict = Predict(argv[1])
     with open(argv[2], 'r') as f:
         lines = f.readlines()
     for line in lines:
