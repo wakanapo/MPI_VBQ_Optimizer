@@ -6,7 +6,7 @@
 #include <ext/stdio_filebuf.h>
 #include <signal.h>
 
-#include <mpi/mpi.h>
+#include <mpi.h>
 #include <grpc/grpc.h>
 #include <grpcpp/channel.h>
 #include <grpcpp/client_context.h>

@@ -10,7 +10,7 @@
 #include <sys/stat.h>
 #include <thread>
 
-#include <mpi/mpi.h>
+#include <mpi.h>
 
 #include "ga.hpp"
 #include "util/color.hpp"

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <sys/stat.h>
-#include <mpi/mpi.h>
+#include <mpi.h>
 
 #include "client/ga.hpp"
 #include "services/mpi_to_grpc_communicator.hpp"
