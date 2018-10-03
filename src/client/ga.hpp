@@ -34,11 +34,12 @@ public:
   void print(int i, std::string filepath);
   int getGenomLength() {return genom_length_;};
 private:
-  GeneticAlgorithm(int genom_length, int genom_num, float cross_rate,
+  GeneticAlgorithm(int model_depth, int genom_length, int genom_num, float cross_rate,
                    float mutation_rate, int max_generation)
-    : genom_length_(genom_length), genom_num_(genom_num),
+    : model_depth_(model_depth), genom_length_(genom_length), genom_num_(genom_num),
       cross_rate_(cross_rate), mutation_rate_(mutation_rate),
       max_generation_(max_generation) {};
+  int model_depth_;
   int genom_length_;
   int genom_num_;
   float cross_rate_;

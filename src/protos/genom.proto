@@ -2,16 +2,20 @@ syntax = "proto3";
 package GenomEvaluation;
 
 service GenomEvaluation {
-  rpc GetIndividual(Genom) returns (Individual) {};
-  rpc GetIndividualMock(Genom) returns (Individual) {};
+  rpc GetIndividual(Genoms) returns (Individual) {};
+  rpc GetIndividualMock(Genoms) returns (Individual) {};
 }
 
 message Genom {
   repeated float gene = 1 [packed=true];
 }
 
+message Genoms {
+  repeated Genom genom = 1;
+}
+
 message Individual {
-  Genom genom = 1;
+  Genoms genoms = 1;
   float evaluation = 2;
 }
 

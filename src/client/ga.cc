@@ -39,11 +39,13 @@ GeneticAlgorithm GeneticAlgorithm::setup(std::string filepath) {
     exit(1);
   }
 
-  GeneticAlgorithm ga(generation.individuals(0).genom().gene_size() ,
+  GeneticAlgorithm ga(generation.individuals(0).genoms().genom_size(),
+                      generation.individuals(0).genoms().genom(0).gene_size() ,
                       generation.individuals_size(),
                       Options::GetCrossRate(),Options::GetMutationRate(),
                       Options::GetMaxGeneration());
-  MPI_Bcast(&ga.genom_length_, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  int tmp[2] = {ga.genom_length_, ga.model_depth_};
+  MPI_Bcast(tmp, 2, MPI_INT, 0, MPI_COMM_WORLD);
   if (!Options::ResumeEnable()) {
     std::ofstream ofs(filepath+"/metadata.txt", std::ios::app);
     ofs << "Genom Length: " << ga.genom_length_ << std::endl;
@@ -56,8 +58,10 @@ GeneticAlgorithm GeneticAlgorithm::setup(std::string filepath) {
   std::vector<Genom> genoms;
   for (int i = 0; i < generation.individuals_size(); ++i) {
     std::vector<float> gene;
-    for (int j = 0; j < generation.individuals(0).genom().gene_size(); ++j) {
-      gene.push_back(generation.individuals(i).genom().gene(j));
+    for (int j = 0; j < generation.individuals(0).genoms().genom_size(); ++j) {
+      for (int k = 0; k < generation.individuals(0).genoms().genom(j).gene_size(); ++k) {
+        gene.push_back(generation.individuals(i).genoms().genom(j).gene(k));
+      }
     }
     genoms.push_back({gene, generation.individuals(i).evaluation()});
   }
@@ -252,11 +256,14 @@ void GeneticAlgorithm::save(std::string filename) {
   GenomEvaluation::Generation gs;
   for (auto genom : genoms_) {
     GenomEvaluation::Individual* g = gs.add_individuals();
-    GenomEvaluation::Genom* genes = new GenomEvaluation::Genom();
-    for (auto gene : genom.getGenom()) {
-      genes->mutable_gene()->Add(gene);
+    GenomEvaluation::Genoms* genoms = new GenomEvaluation::Genoms();
+    for (int i = 0; i < model_depth_; ++i) {
+      GenomEvaluation::Genom* genes = genoms->add_genom();
+      for (int j = 0; j < genom_length_; ++j) {
+        genes->add_gene(genom.getGenom()[i * genom_length_ + j]);
+      }
     }
-    g->set_allocated_genom(genes);
+    g->set_allocated_genoms(genoms);
     g->set_evaluation(genom.getEvaluation());
   }
 

@@ -27,15 +27,15 @@ logging.basicConfig(filename='data/python_server_log.txt', filemode='w',
                     format=fmt, level=logging.DEBUG)
 logger = logging.getLogger('Main')
 
-def calculate_fitness(genom, model_name, quantize_layer):
+def calculate_fitness(genoms, model_name, quantize_layer):
     try:
         with K.get_session().graph.as_default():
             model = model_selector(model_name)
             W_q = copy.deepcopy(g_W)
             if quantize_layer == -1:
-                W_q[::2] = list(map(converter(genom.gene), W_q[::2]))
+                W_q[::2] = np.array([converter(genoms[i].gene)(W_q[i*2]) for i in range(len(W_q)//2)])
             elif quantize_layer >= 0 and quantize_layer*2 < len(W_q):
-                W_q[quantize_layer*2] = converter(genom.gene)(W_q[quantize_layer*2])
+                W_q[quantize_layer*2] = converter(genoms[quantize_layer].gene)(W_q[quantize_layer*2])
             else:
                 sys.exit("quantize_layer is out of index.")
             model.set_weights(W_q)
@@ -55,13 +55,13 @@ class GenomEvaluationServicer(genom_pb2_grpc.GenomEvaluationServicer):
         self.quantize_layer_ = quantize_layer
         
     def GetIndividual(self, request, context):
-        return genom_pb2.Individual(genom=request,
+        return genom_pb2.Individual(genoms=request,
                                     evaluation=calculate_fitness(request,
                                                                  self.model_name_,
                                                                  self.quantize_layer_))
 
     def GetIndividualMock(self, request, context):
-        return genom_pb2.Individual(genom=request, evaluation=0.5)
+        return genom_pb2.Individual(genoms=request, evaluation=0.5)
 
 def server(model_name, quantize_layer, rank):
     global val_X, val_y, g_W

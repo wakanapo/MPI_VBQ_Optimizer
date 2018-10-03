@@ -20,25 +20,31 @@
 #include "util/util.hpp"
 
 void Communicator::getBufferSize() {
-  MPI_Bcast(&buffer_size_, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  int tmp[2] = {};
+  MPI_Bcast(tmp, 2, MPI_INT, 0, MPI_COMM_WORLD);
+  buffer_size_ = tmp[0];
+  repeat_times_ = tmp[1];
 }
 
 int Communicator::mpiReceiver() {
-  arr_.resize(buffer_size_);
+  arr_.resize(buffer_size_*repeat_times_);
   MPI_Status status;
-  MPI_Recv(arr_.data(), buffer_size_, MPI_FLOAT,
+  MPI_Recv(arr_.data(), buffer_size_*repeat_times_, MPI_FLOAT,
            0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
   return status.MPI_TAG;
 }
 
 int Communicator::grpcSender() {
   GenomEvaluation::Individual individual;
-  GenomEvaluation::Genom* genes = new GenomEvaluation::Genom();
-  for (float v : arr_) {
-    genes->mutable_gene()->Add(v);
+  GenomEvaluation::Genoms genoms;
+  for (int i =0; i < repeat_times_; ++i) {
+    GenomEvaluation::Genom* genes = genoms.add_genom();
+    for (int j = 0; j < buffer_size_; ++j) {
+      genes->add_gene(arr_[i*buffer_size_+j]);
+    }
   }
   int cnt = 0;
-  while(!client_.GetIndividualWithEvaluation(*genes, &individual)) {
+  while(!client_.GetIndividualWithEvaluation(genoms, &individual)) {
     if (cnt == 5) {
       std::cerr << "Tried 5 times, but gRPC Failed." << std::endl;
       return -1;
