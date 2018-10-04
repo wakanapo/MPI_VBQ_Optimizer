@@ -28,7 +28,7 @@ def make_log(n):
      return np.sort(ranges) * random.uniform(0.1, 0.7)
 
 def make_random(n):
-    ranges = 2.0 * np.random.rand(n) - 1.0
+    ranges = 1.0 * np.random.rand(n)
     return np.sort(ranges) * random.uniform(0.1, 0.7)
 
 def main(bit, genom_num, filename, flag):
