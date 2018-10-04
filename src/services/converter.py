@@ -1,6 +1,7 @@
 import numpy as np
 
 def converter(rep_v):
+    rep_v = np.array(rep_v)
     rep_v = np.concatenate((-1*rep_v, rep_v), axis=0)
     def f(arr):
         arr = np.array(arr)
