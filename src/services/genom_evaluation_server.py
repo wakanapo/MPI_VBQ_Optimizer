@@ -32,10 +32,12 @@ def calculate_fitness(genoms, model_name, quantize_layer):
         with K.get_session().graph.as_default():
             model = model_selector(model_name)
             W_q = copy.deepcopy(g_W)
-            if quantize_layer == -1:
-                W_q[::2] = np.array([converter(genoms.genom[i].gene)(W_q[i*2]) for i in range(len(W_q)//2)])
+            if len(genoms.genom) > 1:
+                W_q[::2] = [converter(genoms.genom[i].gene)(W_q[i*2]) for i in range(len(W_q)//2)]
+            elif quantize_layer == -1:
+                W_q[::2] = list(map(converter(genoms.genom[0].gene), W_q[::2]))
             elif quantize_layer >= 0 and quantize_layer*2 < len(W_q):
-                W_q[quantize_layer*2] = converter(genoms.genom[quantize_layer].gene)(W_q[quantize_layer*2])
+                W_q[quantize_layer*2] = converter(genoms.genom[0].gene)(W_q[quantize_layer*2])
             else:
                 sys.exit("quantize_layer is out of index.")
             model.set_weights(W_q)
