@@ -204,7 +204,8 @@ void GeneticAlgorithm::genomEvaluation(int size) {
   /* Genomを送信 */
   for (int g_id = 0; g_id < genom_num_; ++g_id) {
     const Genom& genom = genoms_[g_id];
-    std::vector<float> tmp(gene_length_*chromosome_num_);
+    std::vector<float> tmp;
+    tmp.reserve(gene_length_*chromosome_num_);
     for (auto& gene : genom.getChromosome()) {
       tmp.insert(tmp.end(), gene.begin(), gene.end());
     }
