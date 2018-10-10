@@ -2,6 +2,7 @@ import logging
 from keras.applications import vgg16, resnet50
 import cifar10
 import imagenet
+import mnist
 
 logger = logging.getLogger("Selector")
 
@@ -18,6 +19,8 @@ def data_selector(model_name):
             val_X = vgg16.preprocess_input(val_X)
         else:
             val_X = resnet50.preprocess_input(val_X)
+    elif model_name == 'mnist':
+        _, _, val_X, val_y = mnist.read_data()
     else:
         val_X = []
         val_y = []
@@ -51,4 +54,11 @@ def model_selector(model_name, weights=True):
                 logger.debug("Load weights: success")
             else:
                 model = resnet50.ResNet50(weights=None)
+        elif model_name == 'mnist':
+            model_class = mnist.Mnist();
+            logger.debug("Model: MNIST")
+            model = model_class.build()
+            if weights:
+                model.load_weights('data/'+model_class.name+'.h5')
+                logger.debug("Load weights: success.")
     return model
