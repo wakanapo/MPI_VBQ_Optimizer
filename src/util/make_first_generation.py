@@ -32,17 +32,19 @@ def make_random(n):
     return np.sort(ranges) * random.uniform(0.1, 0.7)
 
 def main(bit, genom_num, filename, flag):
-    if flag == "random":
-        genes = []
-    else:
+    if flag == "intent":
         genes = [make_normal(bit), make_linear(bit), make_log(bit)]
-    for _ in range(genom_num - len(genes)):
+    else:
+        genes = []
+    for _ in range(genom_num*repeat_times - len(genes)):
         genes.append(make_random(bit))
 
     message = genom_pb2.Generation();
-    for gene in genes:
-        genoms = message.individuals.add()
-        genoms.genom.gene.extend(gene)
+    for i in range(genom_num):
+        individual = message.individuals.add()
+        for j in range(repeat_times):
+            genom = individual.genoms.genom.add()
+            genom.gene.extend(genes[i*repeat_times+j])
 
     with open("{}/data/{}.pb".format(pwd, filename), "wb") as f:
         f.write(message.SerializeToString())
@@ -52,4 +54,8 @@ if __name__ =="__main__":
     if len(argv) != 5:
         print("Usage: Python {} partition# genom# filename flag".format(argv[0]))
         quit()
+    if argv[4].isdecimal():
+        repeat_times = int(argv[4])
+    else:
+        repeat_times = 1
     main(int(argv[1]), int(argv[2]), argv[3], argv[4])

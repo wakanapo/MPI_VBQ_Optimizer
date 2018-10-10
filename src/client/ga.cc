@@ -39,14 +39,17 @@ GeneticAlgorithm GeneticAlgorithm::setup(std::string filepath) {
     exit(1);
   }
 
-  GeneticAlgorithm ga(generation.individuals(0).genom().gene_size() ,
+  GeneticAlgorithm ga(generation.individuals(0).genoms().genom(0).gene_size() ,
+                      generation.individuals(0).genoms().genom_size(),
                       generation.individuals_size(),
                       Options::GetCrossRate(),Options::GetMutationRate(),
                       Options::GetMaxGeneration());
-  MPI_Bcast(&ga.genom_length_, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  int tmp[2] = {ga.gene_length_, ga.chromosome_num_};
+  MPI_Bcast(tmp, 2, MPI_INT, 0, MPI_COMM_WORLD);
   if (!Options::ResumeEnable()) {
     std::ofstream ofs(filepath+"/metadata.txt", std::ios::app);
-    ofs << "Genom Length: " << ga.genom_length_ << std::endl;
+    ofs << "Gene Length: " << ga.gene_length_ << std::endl;
+    ofs << "The number of Chromosome: " << ga.chromosome_num_ << std::endl;
     ofs << "The number of Genom: " << ga.genom_num_ << std::endl;
     ofs << "Crossover Rate: " << ga.cross_rate_ << std::endl;
     ofs << "Mutation Rate: " << ga.mutation_rate_ << std::endl;
@@ -55,11 +58,15 @@ GeneticAlgorithm GeneticAlgorithm::setup(std::string filepath) {
   
   std::vector<Genom> genoms;
   for (int i = 0; i < generation.individuals_size(); ++i) {
-    std::vector<float> gene;
-    for (int j = 0; j < generation.individuals(0).genom().gene_size(); ++j) {
-      gene.push_back(generation.individuals(i).genom().gene(j));
+    std::vector<Gene> chronosome;
+    for (int j = 0; j < generation.individuals(0).genoms().genom_size(); ++j) {
+      Gene gene;
+      for (int k = 0; k < generation.individuals(0).genoms().genom(j).gene_size(); ++k) {
+        gene.push_back(generation.individuals(i).genoms().genom(j).gene(k));
+      }
+      chronosome.push_back(gene);
     }
-    genoms.push_back({gene, generation.individuals(i).evaluation()});
+    genoms.push_back({chronosome, generation.individuals(i).evaluation()});
   }
   ga.moveGenoms(std::move(genoms));
   return ga;
@@ -69,16 +76,14 @@ void GeneticAlgorithm::moveGenoms(std::vector<Genom>&& genoms) {
   genoms_ = std::move(genoms);
 }
 
-std::vector<Genom> GeneticAlgorithm::crossover(const Genom& mom, const Genom& dad) const {
+Gene GeneticAlgorithm::crossover(Gene genom_one, Gene genom_two) const {
   /*
     二点交叉を行う関数
   */
   // 両端はcenterに選ばない
-  std::uniform_int_distribution<> dist(1, genom_length_-2);
+  std::uniform_int_distribution<> dist(1, gene_length_-2);
   int center = dist(mt);
-  int range = std::min({(dist(mt)+1)/2, center, (genom_length_ - center)});
-  std::vector<float> genom_one = mom.getGenom();
-  std::vector<float> genom_two = dad.getGenom();
+  int range = std::min({(dist(mt)+1)/2, center, (gene_length_ - center)});
   auto inc_itr = std::lower_bound(genom_two.begin(), genom_two.end(),
                                   genom_one[center]);
   auto dic_itr = inc_itr;
@@ -96,24 +101,22 @@ std::vector<Genom> GeneticAlgorithm::crossover(const Genom& mom, const Genom& da
     }
   }
   std::sort(genom_one.begin(), genom_one.end());
-  std::sort(genom_two.begin(), genom_two.end());
-  return {{genom_one, 0}, {genom_two, 0}};
+  return genom_one;
 }
 
-Genom GeneticAlgorithm::mutation(const Genom& parent) const {
+Gene GeneticAlgorithm::mutation(Gene gene) const {
   /*
     突然変異関数
   */
   std::uniform_real_distribution<> rand(0.0, 1.0);
-  std::vector<float> genes = parent.getGenom();
   
-  for (int i = 0; i < genom_length_; ++i) {
-    float left = (i == 0) ? genes[i] - 0.05 : genes[i-1];
-    float right = (i == genom_length_ - 1) ? genes[i] + 0.05 : genes[i+1];
+  for (int i = 0; i < gene_length_; ++i) {
+    float left = (i == 0) ? gene[i] - 0.05 : gene[i-1];
+    float right = (i == gene_length_ - 1) ? gene[i] + 0.05 : gene[i+1];
     std::uniform_real_distribution<> new_pos(left, right);
-    genes[i] = new_pos(mt);
+    gene[i] = new_pos(mt);
   }
-  return {genes, 0};
+  return gene;
 }
 
 int maxGenom(std::vector<Genom> genoms) {
@@ -154,24 +157,31 @@ void GeneticAlgorithm::nextGenerationGeneCreate() {
 
   while ((int)new_genoms.size() < genom_num_) {
     int idx = dist(mt);
-    auto r = rand(mt);
-    
-    /* 突然変異 */
-    if (r < mutation_rate_) {
-      new_genoms.push_back(mutation(genoms_[idx]));
-      continue;
+    std::vector<Gene> new_genom;
+
+    for (int i = 0; i < chromosome_num_; ++i) {
+      const Gene& gene = genoms_[idx].getGene(i);
+      auto r = rand(mt);
+      /* 突然変異 */
+      if (r < mutation_rate_) {
+        new_genom.push_back(mutation(gene));
+        continue;
+      }
+
+      r -= mutation_rate_;
+      /* 交叉 */
+      if (r < cross_rate_) {
+        int idx2 = dist(mt);
+        while (idx2 == idx) {
+          idx2 = dist(mt);
+        }
+        new_genom.push_back(crossover(gene, genoms_[idx2].getGene(i)));
+        continue;
+      }
+      /* 再生 */
     }
 
-    /* 交叉 */
-    if ((int)new_genoms.size() <= genom_num_ - 2) {
-      int idx2 = dist(mt);
-      while (idx2 == idx) {
-        idx2 = dist(mt);
-      }
-      auto genoms = crossover(genoms_[idx], genoms_[idx2]);
-      std::copy(genoms.begin(), genoms.end(), std::back_inserter(new_genoms));
-      continue;
-    }
+    new_genoms.push_back({new_genom, 0});
   }
   genoms_ = std::move(new_genoms);
 }
@@ -193,10 +203,15 @@ void GeneticAlgorithm::genomEvaluation(int size) {
   std::vector<std::pair<int, int>> targets;
   /* Genomを送信 */
   for (int g_id = 0; g_id < genom_num_; ++g_id) {
-    Genom* genom = &genoms_[g_id];
-    if (genom->getEvaluation() <= 0) {
+    const Genom& genom = genoms_[g_id];
+    std::vector<float> tmp;
+    tmp.reserve(gene_length_*chromosome_num_);
+    for (auto& gene : genom.getChromosome()) {
+      tmp.insert(tmp.end(), gene.begin(), gene.end());
+    }
+    if (genom.getEvaluation() <= 0) {
       int target_rank = node % (size-1) + 1;
-      MPI_Send(genom->getGenom().data(), genom_length_, MPI_FLOAT,
+      MPI_Send(tmp.data(), gene_length_*chromosome_num_, MPI_FLOAT,
                target_rank, g_id+1, MPI_COMM_WORLD);
       targets.push_back({target_rank, g_id});
       ++node;
@@ -250,13 +265,16 @@ void GeneticAlgorithm::save(std::string filename) {
   }
   
   GenomEvaluation::Generation gs;
-  for (auto genom : genoms_) {
+  for (auto& genom : genoms_) {
     GenomEvaluation::Individual* g = gs.add_individuals();
-    GenomEvaluation::Genom* genes = new GenomEvaluation::Genom();
-    for (auto gene : genom.getGenom()) {
-      genes->mutable_gene()->Add(gene);
+    GenomEvaluation::Genoms* genoms = new GenomEvaluation::Genoms();
+    for (auto& gene : genom.getChromosome()) {
+      GenomEvaluation::Genom* genes = genoms->add_genom();
+      for (float v : gene) {
+        genes->add_gene(v);
+      }
     }
-    g->set_allocated_genom(genes);
+    g->set_allocated_genoms(genoms);
     g->set_evaluation(genom.getEvaluation());
   }
 

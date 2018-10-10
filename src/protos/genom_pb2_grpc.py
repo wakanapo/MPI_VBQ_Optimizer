@@ -16,12 +16,12 @@ class GenomEvaluationStub(object):
     """
     self.GetIndividual = channel.unary_unary(
         '/GenomEvaluation.GenomEvaluation/GetIndividual',
-        request_serializer=genom__pb2.Genom.SerializeToString,
+        request_serializer=genom__pb2.Genoms.SerializeToString,
         response_deserializer=genom__pb2.Individual.FromString,
         )
     self.GetIndividualMock = channel.unary_unary(
         '/GenomEvaluation.GenomEvaluation/GetIndividualMock',
-        request_serializer=genom__pb2.Genom.SerializeToString,
+        request_serializer=genom__pb2.Genoms.SerializeToString,
         response_deserializer=genom__pb2.Individual.FromString,
         )
 
@@ -49,12 +49,12 @@ def add_GenomEvaluationServicer_to_server(servicer, server):
   rpc_method_handlers = {
       'GetIndividual': grpc.unary_unary_rpc_method_handler(
           servicer.GetIndividual,
-          request_deserializer=genom__pb2.Genom.FromString,
+          request_deserializer=genom__pb2.Genoms.FromString,
           response_serializer=genom__pb2.Individual.SerializeToString,
       ),
       'GetIndividualMock': grpc.unary_unary_rpc_method_handler(
           servicer.GetIndividualMock,
-          request_deserializer=genom__pb2.Genom.FromString,
+          request_deserializer=genom__pb2.Genoms.FromString,
           response_serializer=genom__pb2.Individual.SerializeToString,
       ),
   }

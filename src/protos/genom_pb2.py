@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='genom.proto',
   package='GenomEvaluation',
   syntax='proto3',
-  serialized_pb=_b('\n\x0bgenom.proto\x12\x0fGenomEvaluation\"\x19\n\x05Genom\x12\x10\n\x04gene\x18\x01 \x03(\x02\x42\x02\x10\x01\"G\n\nIndividual\x12%\n\x05genom\x18\x01 \x01(\x0b\x32\x16.GenomEvaluation.Genom\x12\x12\n\nevaluation\x18\x02 \x01(\x02\">\n\nGeneration\x12\x30\n\x0bindividuals\x18\x01 \x03(\x0b\x32\x1b.GenomEvaluation.Individual2\xa5\x01\n\x0fGenomEvaluation\x12\x46\n\rGetIndividual\x12\x16.GenomEvaluation.Genom\x1a\x1b.GenomEvaluation.Individual\"\x00\x12J\n\x11GetIndividualMock\x12\x16.GenomEvaluation.Genom\x1a\x1b.GenomEvaluation.Individual\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x0bgenom.proto\x12\x0fGenomEvaluation\"\x19\n\x05Genom\x12\x10\n\x04gene\x18\x01 \x03(\x02\x42\x02\x10\x01\"/\n\x06Genoms\x12%\n\x05genom\x18\x01 \x03(\x0b\x32\x16.GenomEvaluation.Genom\"I\n\nIndividual\x12\'\n\x06genoms\x18\x01 \x01(\x0b\x32\x17.GenomEvaluation.Genoms\x12\x12\n\nevaluation\x18\x02 \x01(\x02\">\n\nGeneration\x12\x30\n\x0bindividuals\x18\x01 \x03(\x0b\x32\x1b.GenomEvaluation.Individual2\xa7\x01\n\x0fGenomEvaluation\x12G\n\rGetIndividual\x12\x17.GenomEvaluation.Genoms\x1a\x1b.GenomEvaluation.Individual\"\x00\x12K\n\x11GetIndividualMock\x12\x17.GenomEvaluation.Genoms\x1a\x1b.GenomEvaluation.Individual\"\x00\x62\x06proto3')
 )
 
 
@@ -56,6 +56,37 @@ _GENOM = _descriptor.Descriptor(
 )
 
 
+_GENOMS = _descriptor.Descriptor(
+  name='Genoms',
+  full_name='GenomEvaluation.Genoms',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='genom', full_name='GenomEvaluation.Genoms.genom', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=59,
+  serialized_end=106,
+)
+
+
 _INDIVIDUAL = _descriptor.Descriptor(
   name='Individual',
   full_name='GenomEvaluation.Individual',
@@ -64,7 +95,7 @@ _INDIVIDUAL = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='genom', full_name='GenomEvaluation.Individual.genom', index=0,
+      name='genoms', full_name='GenomEvaluation.Individual.genoms', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -89,8 +120,8 @@ _INDIVIDUAL = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=59,
-  serialized_end=130,
+  serialized_start=108,
+  serialized_end=181,
 )
 
 
@@ -120,13 +151,15 @@ _GENERATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=132,
-  serialized_end=194,
+  serialized_start=183,
+  serialized_end=245,
 )
 
-_INDIVIDUAL.fields_by_name['genom'].message_type = _GENOM
+_GENOMS.fields_by_name['genom'].message_type = _GENOM
+_INDIVIDUAL.fields_by_name['genoms'].message_type = _GENOMS
 _GENERATION.fields_by_name['individuals'].message_type = _INDIVIDUAL
 DESCRIPTOR.message_types_by_name['Genom'] = _GENOM
+DESCRIPTOR.message_types_by_name['Genoms'] = _GENOMS
 DESCRIPTOR.message_types_by_name['Individual'] = _INDIVIDUAL
 DESCRIPTOR.message_types_by_name['Generation'] = _GENERATION
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -137,6 +170,13 @@ Genom = _reflection.GeneratedProtocolMessageType('Genom', (_message.Message,), d
   # @@protoc_insertion_point(class_scope:GenomEvaluation.Genom)
   ))
 _sym_db.RegisterMessage(Genom)
+
+Genoms = _reflection.GeneratedProtocolMessageType('Genoms', (_message.Message,), dict(
+  DESCRIPTOR = _GENOMS,
+  __module__ = 'genom_pb2'
+  # @@protoc_insertion_point(class_scope:GenomEvaluation.Genoms)
+  ))
+_sym_db.RegisterMessage(Genoms)
 
 Individual = _reflection.GeneratedProtocolMessageType('Individual', (_message.Message,), dict(
   DESCRIPTOR = _INDIVIDUAL,
@@ -162,15 +202,15 @@ _GENOMEVALUATION = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=197,
-  serialized_end=362,
+  serialized_start=248,
+  serialized_end=415,
   methods=[
   _descriptor.MethodDescriptor(
     name='GetIndividual',
     full_name='GenomEvaluation.GenomEvaluation.GetIndividual',
     index=0,
     containing_service=None,
-    input_type=_GENOM,
+    input_type=_GENOMS,
     output_type=_INDIVIDUAL,
     options=None,
   ),
@@ -179,7 +219,7 @@ _GENOMEVALUATION = _descriptor.ServiceDescriptor(
     full_name='GenomEvaluation.GenomEvaluation.GetIndividualMock',
     index=1,
     containing_service=None,
-    input_type=_GENOM,
+    input_type=_GENOMS,
     output_type=_INDIVIDUAL,
     options=None,
   ),

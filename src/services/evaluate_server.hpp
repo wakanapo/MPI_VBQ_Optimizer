@@ -16,7 +16,7 @@ class GenomEvaluationClient {
 public:
   GenomEvaluationClient(std::shared_ptr<grpc::Channel> channel) :
     stub_(GenomEvaluation::GenomEvaluation::NewStub(channel)) {};
-  bool GetIndividualWithEvaluation(const GenomEvaluation::Genom& genom,
+  bool GetIndividualWithEvaluation(const GenomEvaluation::Genoms& genoms,
                                    GenomEvaluation::Individual* individual);
 private:
   std::unique_ptr<GenomEvaluation::GenomEvaluation::Stub> stub_;
