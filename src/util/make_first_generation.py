@@ -10,20 +10,17 @@ import genom_pb2
 def make_normal(n):
     ranges = []
     for i in range(1, n + 1, 2):
-        a,b = norm.interval(alpha=i/(n+2), loc=0, scale=1)
+        a,_ = norm.interval(alpha=i/(n+2), loc=0, scale=1)
         ranges.append(a)
-        ranges.append(b)
     ranges = np.asarray(ranges)
     ranges /= abs(max(ranges, key=abs))
     return np.sort(ranges) * random.uniform(0.1, 0.7)
 
 def make_linear(n):
-    return np.linspace(-1.0, 1.0, n) * random.uniform(0.1, 0.7)
+    return np.linspace(0, 1.0, n) * random.uniform(0.1, 0.7)
 
 def make_log(n):
-     ranges = np.concatenate((-1 * np.logspace(-1, 2.0, num=n),
-                              np.logspace(-1, 2.0, num=n)))
-     ranges = ranges[0::2]
+     ranges = np.logspace(-1, 2.0, num=2*n)[::2]
      ranges /= abs(max(ranges, key=abs))
      return np.sort(ranges) * random.uniform(0.1, 0.7)
 
