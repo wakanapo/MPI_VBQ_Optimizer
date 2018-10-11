@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='genom.proto',
   package='GenomEvaluation',
   syntax='proto3',
-  serialized_pb=_b('\n\x0bgenom.proto\x12\x0fGenomEvaluation\"\x19\n\x05Genom\x12\x10\n\x04gene\x18\x01 \x03(\x02\x42\x02\x10\x01\"/\n\x06Genoms\x12%\n\x05genom\x18\x01 \x03(\x0b\x32\x16.GenomEvaluation.Genom\"I\n\nIndividual\x12\'\n\x06genoms\x18\x01 \x01(\x0b\x32\x17.GenomEvaluation.Genoms\x12\x12\n\nevaluation\x18\x02 \x01(\x02\">\n\nGeneration\x12\x30\n\x0bindividuals\x18\x01 \x03(\x0b\x32\x1b.GenomEvaluation.Individual2\xa7\x01\n\x0fGenomEvaluation\x12G\n\rGetIndividual\x12\x17.GenomEvaluation.Genoms\x1a\x1b.GenomEvaluation.Individual\"\x00\x12K\n\x11GetIndividualMock\x12\x17.GenomEvaluation.Genoms\x1a\x1b.GenomEvaluation.Individual\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x0bgenom.proto\x12\x0fGenomEvaluation\"\x19\n\x05Genom\x12\x10\n\x04gene\x18\x01 \x03(\x02\x42\x02\x10\x01\"/\n\x06Genoms\x12%\n\x05genom\x18\x01 \x03(\x0b\x32\x16.GenomEvaluation.Genom\"G\n\nIndividual\x12%\n\x05genom\x18\x01 \x01(\x0b\x32\x16.GenomEvaluation.Genom\x12\x12\n\nevaluation\x18\x02 \x01(\x02\">\n\nGeneration\x12\x30\n\x0bindividuals\x18\x01 \x03(\x0b\x32\x1b.GenomEvaluation.Individual2\xa7\x01\n\x0fGenomEvaluation\x12G\n\rGetIndividual\x12\x17.GenomEvaluation.Genoms\x1a\x1b.GenomEvaluation.Individual\"\x00\x12K\n\x11GetIndividualMock\x12\x17.GenomEvaluation.Genoms\x1a\x1b.GenomEvaluation.Individual\"\x00\x62\x06proto3')
 )
 
 
@@ -95,7 +95,7 @@ _INDIVIDUAL = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='genoms', full_name='GenomEvaluation.Individual.genoms', index=0,
+      name='genom', full_name='GenomEvaluation.Individual.genom', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -121,7 +121,7 @@ _INDIVIDUAL = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=108,
-  serialized_end=181,
+  serialized_end=179,
 )
 
 
@@ -151,12 +151,12 @@ _GENERATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=183,
-  serialized_end=245,
+  serialized_start=181,
+  serialized_end=243,
 )
 
 _GENOMS.fields_by_name['genom'].message_type = _GENOM
-_INDIVIDUAL.fields_by_name['genoms'].message_type = _GENOMS
+_INDIVIDUAL.fields_by_name['genom'].message_type = _GENOM
 _GENERATION.fields_by_name['individuals'].message_type = _INDIVIDUAL
 DESCRIPTOR.message_types_by_name['Genom'] = _GENOM
 DESCRIPTOR.message_types_by_name['Genoms'] = _GENOMS
@@ -202,8 +202,8 @@ _GENOMEVALUATION = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=248,
-  serialized_end=415,
+  serialized_start=246,
+  serialized_end=413,
   methods=[
   _descriptor.MethodDescriptor(
     name='GetIndividual',
