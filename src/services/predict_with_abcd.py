@@ -22,14 +22,9 @@ class Predict:
         self.model = model_selector(model_name, weights=True)
         self.g_W = self.model.get_weights()
 
-    def run(self, partition, quantize_layer):
+    def run(self, partitions):
         W_q = copy.deepcopy(self.g_W)
-        if quantize_layer == -1:
-            W_q[::2] = list(map(converter(partition), W_q[::2]))
-        elif quantize_layer >= 0 and quantize_layer*2 < len(W_q):
-            W_q[quantize_layer*2] = converter(partition)(W_q[quantize_layer*2])
-        else:
-            sys.exit("quantize_layer is out of index.")
+        W_q[::2] = [converter(partitions[i])(W_q[i*2]) for i in range(len(W_q)//2)]
         self.model.set_weights(W_q)
         self.model.compile(optimizer=optimizers.Adam(),
                         loss='categorical_crossentropy',
@@ -52,10 +47,11 @@ if __name__=='__main__':
     predict = Predict(argv[1])
     with open(argv[2], 'r') as f:
         lines = f.readlines()
+    partitions = []
     for line in lines:
         data = list(map(float, line.split(',')))
         partition = get_partition_from_abcd(int(argv[3]), data[1], data[2],
                                             data[3], data[4])
-        q_layer = int(data[0])
-        acc = predict.run(partition, q_layer)
-        print("Layer {}: {}".format(q_layer, acc))
+        partitions.append(partition)
+    acc = predict.run(partitions)
+    print("acc: {}".format(acc))

@@ -46,9 +46,10 @@ def get_dir(dirname):
     path = 'data/{}/'.format(dirname)
     dirs = []
     for d in os.listdir(path):
+        layer_idx = int(d.split('_')[2])
         if os.path.isdir(path+d):
-            dirs.append(path+d)
-    return sorted(dirs)
+            dirs.append((layer_idx, path+d))
+    return dirs
 
 if __name__=='__main__':
     argv = sys.argv
@@ -59,10 +60,9 @@ if __name__=='__main__':
     model_name = argv[2]
     val_X, val_y = data_selector(model_name)
     print("data load: success.")
-    X = np.array([])
-    y = np.array([])
-    genoms = []
-    for d in get_dir(dirname):
-        genoms.append(get_best_genom(dirname+"/"+d))
-    accuracy = predict(get_best_genom(path), model_name, X, y)
-    print(path, "acc: {}".format(accuracy))
+    dirs = get_dir(dirname)
+    genoms = [[]]*len(dirs)
+    for d in dirs:
+        genoms[d[0]] = (get_best_genom(d[1]))
+    accuracy = predict(genoms, model_name, val_X, val_y)
+    print("acc: {}".format(accuracy))
