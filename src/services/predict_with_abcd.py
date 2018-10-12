@@ -43,7 +43,7 @@ def get_partition_from_abcd(p_num, a, b, c, d):
 if __name__=='__main__':
     argv = sys.argv
     if len(argv) < 4:
-        print("Usage: pythono predict_with_abcd.py <model_name> <abcd_file> <partition_num>")
+        print("Usage: python predict_with_abcd.py <model_name> <abcd_file> <partition_num>")
     predict = Predict(argv[1])
     with open(argv[2], 'r') as f:
         lines = f.readlines()
