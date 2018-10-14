@@ -1,3 +1,4 @@
+#include <cmath>
 #include <fstream>
 #include <sstream>
 #include <random>
@@ -14,8 +15,8 @@ namespace {
 std::vector<float> getPartitionFromParams(const Param& param, int n) {
   std::vector<float> partition;
   for (int i = 0; i < n; ++i) {
-    float x = i / (n-1) - 0.5;
-    float y = param.b * (std::pow(param.a, x) - 1);
+    float x = (float) i / (n-1) - 0.5;
+    float y = param.b * (std::pow(param.a, std::abs(x)) - 1);
     y *= (std::signbit(x)) ? -1 : 1;
     partition.push_back(y);
   }
@@ -34,8 +35,8 @@ void SimulatedAnnealing::updateState_(int n, int layer) {
   }
 
   /* a, bそれぞれの近傍のを求め、3つのupdate候補を作成 */
-  float tmp_a = params_.at(layer).a + (dist(mt) - 0.5);
-  float tmp_b = params_.at(layer).b + (dist(mt) - 0.5);
+  float tmp_a = params_.at(layer).a * (1 + (dist(mt) - 0.5));
+  float tmp_b = params_.at(layer).b * (1 + (dist(mt) - 0.5));
   std::vector<Param> candidates = {{tmp_a, params_.at(layer).b}, {params_.at(layer).a, tmp_b},
                                    {tmp_a, tmp_b}};
   for (int i = 0; i < (int)candidates.size(); ++i) {
