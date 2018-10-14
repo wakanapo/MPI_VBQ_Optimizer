@@ -53,4 +53,4 @@ private:
   std::vector<Genom> genoms_;
 };
 
-void client(std::string filepath);
+void gaClient(std::string filepath);

@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
                << first_genom_file << "_" << quantize_layer << "_" << timestamp();
       mkdir(filepath.str().c_str(), 0777);
     }
-    client(filepath.str());
+    gaClient(filepath.str());
   } else {
     server(model_name, quantize_layer, rank);
   }

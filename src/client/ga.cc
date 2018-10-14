@@ -18,8 +18,10 @@
 #include "util/timer.hpp"
 #include "protos/genom.pb.h"
 
-std::random_device seed;
-std::mt19937 mt(seed());
+namespace {
+  std::random_device seed;
+  std::mt19937 mt(seed());
+}
 
 void Genom::setRandomEvaluation() {
   std::uniform_real_distribution<> rand(0.0, evaluation_);
@@ -321,7 +323,7 @@ void GeneticAlgorithm::run(std::string filepath) {
   std::cerr << "Client Finish." << std::endl;
 }
 
-void client(std::string filepath){
+void gaClient(std::string filepath) {
   GeneticAlgorithm ga = GeneticAlgorithm::setup(filepath);
   ga.run(filepath);
 }
