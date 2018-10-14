@@ -44,13 +44,13 @@ void SimulatedAnnealing::updateState_(int n, int layer) {
       tmp[layer*n + j] = partition[j];
     }
     MPI_Send(tmp.data(), tmp.size(), MPI_FLOAT,
-             i, layer+1, MPI_COMM_WORLD);
+             i+1, layer+1, MPI_COMM_WORLD);
   }
 
   /* Evaluationを受信 */
   for (int i = 0; i < (int)candidates.size(); ++i) {
     float candidate_evl;
-    MPI_Recv(&candidate_evl, 1, MPI_FLOAT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(&candidate_evl, 1, MPI_FLOAT, i+1, layer+1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     float p = std::exp(-std::abs(candidate_evl- evaluation_) / temperature_);
     if (candidate_evl > evaluation_ || dist(mt) < p) {
       params_.mutable_get().at(layer) = candidates[i];
@@ -86,6 +86,9 @@ void SimulatedAnnealing::run(int n, std::string filepath) {
 }
 
 void saClient(int n, std::string filepath) {
-  SimulatedAnnealing sa(Params({{100.0, 0.01}}), 10000, 0.99);
+  Params init({{100.0, 0.01}});
+  SimulatedAnnealing sa(init, 10000, 0.99);
+  int tmp[2] = {n, init.size()};
+  MPI_Bcast(tmp, 2, MPI_INT, 0, MPI_COMM_WORLD);
   sa.run(n, filepath);
 }

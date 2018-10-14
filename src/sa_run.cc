@@ -16,7 +16,6 @@ int main(int argc, char* argv[]) {
               << std::endl;
     return 1;
   }
-  Options::ParseCommandLine(argc, argv);
   int n = std::atoi(argv[1]);
   std::string model_name = argv[2];
   int rank;

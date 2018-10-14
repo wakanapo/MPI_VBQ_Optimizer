@@ -26,7 +26,7 @@ def data_selector(model_name):
         val_y = []
     return val_X, val_y
 
-def model_selector(model_name, weights=True):
+def model_selector(model_name, weights=False):
     model = ModelMock()
     if model_name == 'vgg_like' or model_name == 'hinton':
         if model_name == 'vgg_like':
