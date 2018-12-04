@@ -22,15 +22,18 @@ class SimulatedAnnealing {
 public:
   SimulatedAnnealing(Params params, float temperature, float cool_down) :
     params_(params), evaluation_(0.0), temperature_(temperature), cool_down_(cool_down) {};
+  void setBitwidths(const std::vector<int>& bitwidths) { bitwidths_ = bitwidths; };
+  void evaluateState(int n);
   void updateState(int n);
   void run(int n, std::string filepath);
   void save(std::string filepath);
 private:
-  void updateState_(int n, int layer);
+  void updateState_(int n, int layer, int dummy_n);
   Params params_;
   float evaluation_;
   float temperature_;
   float cool_down_;
+  std::vector<int> bitwidths_;
 };
 
 void saClient(int n, std::string filepath);

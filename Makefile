@@ -1,5 +1,5 @@
-CXX := mpic++
-PROTOC := protoc
+CXX := mpicxx
+PROTOC := /lustre/gj16/j16001/.local/bin/protoc
 CXXFLAGS := -std=c++11 -g3 -Wall -Wextra -O2 -pthread `pkg-config --cflags protobuf grpc++`
 LDFLAGS := `pkg-config --libs protobuf grpc grpc++`
 

@@ -1,8 +1,12 @@
 import logging
-from keras.applications import vgg16, resnet50
+from keras.applications import vgg16
 import cifar10
 import imagenet
 import mnist
+import AlexNet
+import numpy as np
+import h5py
+import pickle
 
 logger = logging.getLogger("Selector")
 
@@ -13,12 +17,12 @@ class ModelMock:
 def data_selector(model_name):
     if model_name == 'vgg_like' or model_name == 'hinton':
         _, _, val_X, val_y = cifar10.read_data()
-    elif model_name == 'vgg16' or model_name == 'resnet50':
+    elif model_name == 'vgg16' :
         val_X, val_y = imagenet.load()
-        if model_name == 'vgg16':
-            val_X = vgg16.preprocess_input(val_X)
-        else:
-            val_X = resnet50.preprocess_input(val_X)
+        val_X = vgg16.preprocess_input(val_X)
+    elif model_name == 'alexnet':
+        val_X, val_y = imagenet.load(size=(227, 227))
+        val_X = vgg16.preprocess_input(val_X)
     elif model_name == 'mnist':
         _, _, val_X, val_y = mnist.read_data()
     else:
@@ -47,13 +51,16 @@ def model_selector(model_name, weights=False):
                 logger.debug("Load weights: success.")
             else:
                 model = vgg16.VGG16(weights=None)
-        elif model_name == 'resnet50':
-            logger.debug("Model: resnet50")
+        elif model_name == 'alexnet':
+            logger.debug("Model: alexnet")
             if weights:
-                model = resnet50.ResNet50(weights='data/resnet50_retraining.h5')
+                model = AlexNet.create_model()
+                with open('data/alexnet.pkl', 'rb') as f:
+                    weights = pickle.load(f)
+                model.set_weights(weights)
                 logger.debug("Load weights: success")
             else:
-                model = resnet50.ResNet50(weights=None)
+                model = AlexNet.create_model()
         elif model_name == 'mnist':
             model_class = mnist.Mnist();
             logger.debug("Model: MNIST")
@@ -62,3 +69,5 @@ def model_selector(model_name, weights=False):
                 model.load_weights('data/'+model_class.name+'.h5')
                 logger.debug("Load weights: success.")
     return model
+
+
