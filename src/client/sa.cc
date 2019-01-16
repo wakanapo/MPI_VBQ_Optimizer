@@ -130,13 +130,13 @@ void SimulatedAnnealing::run(int n, std::string filepath) {
 void gridSearch(int n, std::string filepath) {
   for (int i = 1; i < 100; ++i) {
     std::vector<Param> ps;
-    for (int j = 0; j < 4; ++j) {
+    for (int j = 0; j < 5; ++j) {
       for (int k = 0; k < 4; ++k) {
         int rank = j * 4 + k;
         if (rank == 0)
           continue;
         float a = 1.0 + (float)i / 100;
-        float b = std::pow(0.1, j) * (1 - 0.25 * k);
+        float b = std::pow(10, j) * (1 - 0.25 * k) * 0.1;
         Param p = {a, b};
         ps.push_back(p);
         std::vector<float> partition = getPartitionFromParams(p, n);
@@ -144,39 +144,39 @@ void gridSearch(int n, std::string filepath) {
       }
     }
     std::ofstream ofs(filepath+"/result.csv", std::ios::app);
-    for (int j = 1; j < 16; ++j) {
+    for (int j = 1; j < 20; ++j) {
       float eval;
       MPI_Recv(&eval, 1, MPI_FLOAT, j, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       ofs << ps[j-1].a << "," << ps[j-1].b << "," << eval << std::endl;
     }
     ofs.close();
   }
-  for (int i = 1; i < 16; ++i) {
+  for (int i = 1; i < 20; ++i) {
     float dummy[n];
     MPI_Send(&dummy, n, MPI_FLOAT, i, 0, MPI_COMM_WORLD);
   }
 }
 
-void saClient(int n, std::string filepath) {
-  // std::vector<Param> initial_value = {{1.25, 0.5}, {1.73, 0.075}, {1.82, 0.05},
-  //                                     {1.83, 0.025}, {1.75, 0.025}, {1.66, 0.025},
-  //                                     {1.8, 0.025}, {1.72, 0.025}, {1.98, 0.01},
-  //                                     {1.97, 0.01}, {1.87, 0.01}, {1.53, 0.025},
-  //                                     {1.52, 0.025}, {1.34, 0.1}, {1.77, 0.025},
-  //                                     {1.31, 0.05}};
-  std::vector<Param> initial_value(16, {1.25, 0.05});
-  Params init(initial_value);
-  SimulatedAnnealing sa(init, 1.0, 0.95);
-  std::vector<int> bitwidth(16, n);
-  // std::vector<int> bitwidth = {6,5,6,6,7,6,6,6,5,6,6,5,4,2,2,3};
-  sa.setBitwidths(bitwidth);
-  int tmp[2] = {n, init.size()};
-  MPI_Bcast(tmp, 2, MPI_INT, 0, MPI_COMM_WORLD);
-  sa.run(n, filepath);
-}
-
 // void saClient(int n, std::string filepath) {
-//   int t[2] = {n, 1};
-//   MPI_Bcast(t, 2, MPI_INT, 0, MPI_COMM_WORLD);
-//   gridSearch(n, filepath);
+//   // std::vector<Param> initial_value = {{1.25, 0.5}, {1.73, 0.075}, {1.82, 0.05},
+//   //                                     {1.83, 0.025}, {1.75, 0.025}, {1.66, 0.025},
+//   //                                     {1.8, 0.025}, {1.72, 0.025}, {1.98, 0.01},
+//   //                                     {1.97, 0.01}, {1.87, 0.01}, {1.53, 0.025},
+//   //                                     {1.52, 0.025}, {1.34, 0.1}, {1.77, 0.025},
+//   //                                     {1.31, 0.05}};
+//   std::vector<Param> initial_value(16, {1.25, 0.05});
+//   Params init(initial_value);
+//   SimulatedAnnealing sa(init, 1.0, 0.95);
+//   std::vector<int> bitwidth(16, n);
+//   // std::vector<int> bitwidth = {6,5,6,6,7,6,6,6,5,6,6,5,4,2,2,3};
+//   sa.setBitwidths(bitwidth);
+//   int tmp[2] = {n, init.size()};
+//   MPI_Bcast(tmp, 2, MPI_INT, 0, MPI_COMM_WORLD);
+//   sa.run(n, filepath);
 // }
+
+void saClient(int n, std::string filepath) {
+  int t[2] = {n, 1};
+  MPI_Bcast(t, 2, MPI_INT, 0, MPI_COMM_WORLD);
+  gridSearch(n, filepath);
+}

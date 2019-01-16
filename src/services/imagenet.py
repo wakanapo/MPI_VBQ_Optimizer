@@ -188,7 +188,8 @@ class AlexNet:
         y = tf.nn.softmax(fc8)
         
         correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
-        accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+        top1_accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+        top5_accuracy = tf.reduce_mean(tf.cast(tf.nn.in_top_k(predictions=y, targets=tf.argmax(y_, 1), k=5), tf.float32))
         init = tf.global_variables_initializer()
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
@@ -196,7 +197,8 @@ class AlexNet:
         sess.run(init)
         
         t = time.time()
-        output = sess.run(accuracy, feed_dict = {x:val_X, y_:val_y})
+        top1 = sess.run(top1_accuracy, feed_dict = {x:val_X, y_:val_y})
+        top5 = sess.run(top5_accuracy, feed_dict = {x:val_X, y_:val_y})
         sess.close()
         tf.reset_default_graph()
-        return output
+        return top1 , top5

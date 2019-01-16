@@ -113,8 +113,8 @@ Gene GeneticAlgorithm::mutation(Gene gene) const {
   std::uniform_real_distribution<> rand(0.0, 1.0);
   
   for (int i = 0; i < gene_length_; ++i) {
-    float left = (i == 0) ? gene[i] - 0.05 : gene[i-1];
-    float right = (i == gene_length_ - 1) ? gene[i] + 0.05 : gene[i+1];
+    float left = (i == 0) ? gene[i] - 50: gene[i-1];
+    float right = (i == gene_length_ - 1) ? gene[i] + 50: gene[i+1];
     std::uniform_real_distribution<> new_pos(std::max((float)0, left), right);
     gene[i] = new_pos(mt);
   }

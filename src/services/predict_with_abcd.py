@@ -9,6 +9,8 @@ import logging
 import imagenet
 import keras.backend as K
 from keras.applications import vgg16
+from imagenet import AlexNet
+import gc
 
 # def converter(partition):
 #     def f(arr):
@@ -65,7 +67,7 @@ class Predict:
                               metrics=['accuracy', 'top_k_categorical_accuracy'])
                 score = model.evaluate(self.val_X, self.val_y, verbose=0)
             K.clear_session()
-            return score
+            return score[1:]
         
 def get_partition_from_abcd(p_num, a, b, c, d):
     x = np.arange(p_num) / p_num
@@ -85,12 +87,12 @@ def get_ab(filename):
     return a, b
 
 def save(filepath, ab, acc):
-    with open(filepath+"/prediction.txt", 'w') as f:
-        for i, v in enumerate(ab):
-            f.write("Layer{}: (a, b) = ({}, {})\n".format(i, v[0], v[1]))
+    with open(filepath+"/prediction2.txt", 'a') as f:
+#         for i, v in enumerate(ab):
+#             f.write("Layer{}: (a, b) = ({}, {})\n".format(i, v[0], v[1]))
         f.write("==============\n")
+        f.write(str(acc[0])+"\n")
         f.write(str(acc[1])+"\n")
-        f.write(str(acc[2])+"\n")
 
 if __name__=='__main__':
     argv = sys.argv
@@ -118,6 +120,6 @@ if __name__=='__main__':
         ab_list.append((float(a), float(b)))
         partitions.append(get_partition_from_ab(n, a, b))
     acc = predict.run(partitions, -1)
-    print("Top-1 Accuracy: ", acc[1])
-    print("Top-5 Accuracy: ", acc[2])
+    print("Top-1 Accuracy: ", acc[0])
+    print("Top-5 Accuracy: ", acc[1])
     save(path, ab_list, acc)
