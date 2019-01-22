@@ -24,17 +24,17 @@ def make_log(n):
      ranges /= abs(max(ranges, key=abs))
      return np.sort(ranges) * random.uniform(0.1, 0.7)
 
-def make_random(n):
+def make_random(n, m, M):
     ranges = 1.0 * np.random.rand(n)
-    return np.sort(ranges) * random.uniform(20, 200)
+    return np.sort(ranges) * random.uniform(m, M)
 
-def main(bit, genom_num, filename, flag):
+def main(bit, genom_num, filename, flag, m=0, M=0.7):
     if flag == "intent":
         genes = [make_normal(bit), make_linear(bit), make_log(bit)]
     else:
         genes = []
     for _ in range(genom_num*repeat_times - len(genes)):
-        genes.append(make_random(bit))
+        genes.append(make_random(bit, m, M))
 
     message = genom_pb2.Generation();
     for i in range(genom_num):
@@ -48,11 +48,11 @@ def main(bit, genom_num, filename, flag):
 
 if __name__ =="__main__":
     argv = sys.argv
-    if len(argv) != 5:
+    if len(argv) != 7:
         print("Usage: Python {} partition# genom# filename flag".format(argv[0]))
         quit()
     if argv[4].isdecimal():
         repeat_times = int(argv[4])
     else:
         repeat_times = 1
-    main(int(argv[1]), int(argv[2]), argv[3], argv[4])
+    main(int(argv[1]), int(argv[2]), argv[3], argv[4], m=float(argv[5]), M=float(argv[6]))

@@ -74,7 +74,6 @@ def calculate_fitness(genoms, model_name, quantize_layer):
                             x = Lambda(quantize(genoms.genom[0].gene))(x)
                     x = layers[i](x)
                 model = Model(input=layers[0].input, output=x)
-                logger.debug(model.summary)
                 model.set_weights(g_W)
                 model.compile(optimizer=optimizers.Adam(),
                               loss='categorical_crossentropy',
