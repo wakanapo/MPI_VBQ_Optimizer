@@ -29,10 +29,11 @@ def get_best_genom(dirname):
     arr = np.argsort(arr)[::-1]
     return generation.individuals[arr[0]].genom
 
-def predict(genom, model_name, val_X, val_y):
+def predict(genoms, model_name, val_X, val_y):
     model = model_selector(model_name, weights=True)
     g_W = model.get_weights()
-    W_q = list(map(converter(genom.gene), copy.deepcopy(g_W)))
+    W_q = copy.deepcopy(g_W)
+    W_q[::2] = [converter(genoms[i].gene)(W_q[i*2]) for i in range(len(W_q)//2)]
     print("quantize: success.")
     model.set_weights(W_q)
     model.compile(optimizer=optimizers.Adam(),
@@ -45,9 +46,10 @@ def get_dir(dirname):
     path = 'data/{}/'.format(dirname)
     dirs = []
     for d in os.listdir(path):
+        layer_idx = int(d.split('_')[2])
         if os.path.isdir(path+d):
-            dirs.append(path+d)
-    return sorted(dirs)
+            dirs.append((layer_idx, path+d))
+    return dirs
 
 if __name__=='__main__':
     argv = sys.argv
@@ -57,24 +59,10 @@ if __name__=='__main__':
     dirname = argv[1]
     model_name = argv[2]
     val_X, val_y = data_selector(model_name)
-    dataset = [[(5000, 10000)], [(0, 2500), (7500, 10000)], [(0, 5000)],
-               [(2500, 7500)], [(2500, 5000), (7500, 10000)],
-               [(0, 2500), (5000, 7500)]]
     print("data load: success.")
-    X = np.array([])
-    y = np.array([])
-    for d in get_dir(dirname):
-        for d2 in os.listdir(d):
-            path = d + "/" + d2
-            if os.path.isdir(path):
-                ds = dataset[int(d2[-12])]
-                for i in range(len(ds)):
-                    p = ds[i]
-                    if i == 0:
-                        X = val_X[p[0]:p[1]]
-                        y = val_y[p[0]:p[1]]
-                    else:
-                        X = np.vstack((X, val_X[p[0]:p[1]]))
-                        y = np.vstack((y, val_y[p[0]:p[1]]))
-                accuracy = predict(get_best_genom(path), model_name, X, y)
-                print(path, "acc: {}".format(accuracy))
+    dirs = get_dir(dirname)
+    genoms = [[]]*len(dirs)
+    for d in dirs:
+        genoms[d[0]] = (get_best_genom(d[1]))
+    accuracy = predict(genoms, model_name, val_X, val_y)
+    print("acc: {}".format(accuracy))

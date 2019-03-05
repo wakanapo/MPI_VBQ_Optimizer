@@ -15,7 +15,7 @@ message Genoms {
 }
 
 message Individual {
-  Genoms genoms = 1;
+  Genom genom = 1;
   float evaluation = 2;
 }
 
