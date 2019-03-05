@@ -98,6 +98,7 @@ void server(std::string model_name, int quantize_layer, int rank) {
       break;
     if (comm.grpcSender() < 0) {
       pkill(fp, p_id);
+      std::cerr << "Killed server." << std::endl;
       exit(1);
     };
     comm.mpiSender(tag);

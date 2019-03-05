@@ -2,7 +2,6 @@ import numpy as np
 
 def converter(rep_v):
     rep_v = np.array(rep_v)
-    rep_v = np.concatenate((-1*rep_v[::-1], rep_v), axis=0)
     def f(arr):
         arr = np.array(arr)
         partition = np.array([(rep_v[i] + rep_v[i+1]) / 2 for i in range(len(rep_v)-1)])
