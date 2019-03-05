@@ -1,5 +1,5 @@
-CXX := mpic++
-PROTOC := protoc
+CXX := mpicxx
+PROTOC := /lustre/gj16/j16001/.local/bin/protoc
 CXXFLAGS := -std=c++11 -g3 -Wall -Wextra -O2 -pthread `pkg-config --cflags protobuf grpc++`
 LDFLAGS := `pkg-config --libs protobuf grpc grpc++`
 
@@ -11,21 +11,31 @@ PROTODIR := src/protos
 include src/include.mk
 
 UTILS := $(wildcard src/util/*.cc)
-SRCS := src/run.cc $(wildcard src/client/*.cc) $(wildcard src/services/*.cc) $(UTILS) $(PROTO_MESSAGES:%.proto=%.pb.cc) $(PROTO_SERVICES:%.proto=%.grpc.pb.cc)
+GA_SRCS := src/ga_run.cc src/client/ga.cc $(wildcard src/services/*.cc) $(UTILS) $(PROTO_MESSAGES:%.proto=%.pb.cc) $(PROTO_SERVICES:%.proto=%.grpc.pb.cc)
+
+SA_SRCS := src/sa_run.cc src/client/sa.cc $(wildcard src/services/*.cc) $(UTILS) $(PROTO_MESSAGES:%.proto=%.pb.cc) $(PROTO_SERVICES:%.proto=%.grpc.pb.cc)
 
 PROTO_HEADERS := $(PROTO_MESSAGES:%.proto=%.pb.h) $(PROTO_SERVICES:%.proto=%.grpc.pb.h)
 
-OBJS := $(SRCS:%.cc=$(OBJDIR)/%.o)
-DEPS := $(SRCS:%.cc=$(OBJDIR)/%.d)
+GA_OBJS := $(GA_SRCS:%.cc=$(OBJDIR)/%.o)
+GA_DEPS := $(GA_SRCS:%.cc=$(OBJDIR)/%.d)
+SA_OBJS := $(SA_SRCS:%.cc=$(OBJDIR)/%.o)
+SA_DEPS := $(SA_SRCS:%.cc=$(OBJDIR)/%.d)
 
 .PHONY: all
-all: mpi
+all: ga sa
 
-.PHONY: mpi
-mpi: $(BINDIR)/mpi
+.PHONY: ga
+ga: $(BINDIR)/ga
 
-$(BINDIR)/mpi: $(OBJS) $(BINDIR)
-	$(CXX) -o $@ $(OBJS) $(LDFLAGS)
+.PHONY: sa
+sa: $(BINDIR)/sa
+
+$(BINDIR)/ga: $(GA_OBJS) $(BINDIR)
+	$(CXX) -o $@ $(GA_OBJS) $(LDFLAGS)
+
+$(BINDIR)/sa: $(SA_OBJS) $(BINDIR)
+	$(CXX) -o $@ $(SA_OBJS) $(LDFLAGS)
 
 $(OBJDIR)/%.o: %.cc $(PROTO_HEADERS)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
@@ -46,4 +56,4 @@ $(BINDIR):
 clean:
 	rm -rf $(BINDIR) $(OBJDIR) $(PROTODIR)/*.pb.*
 
--include $(DEPS)
+-include $(GA_DEPS) $(SA_DEPS)

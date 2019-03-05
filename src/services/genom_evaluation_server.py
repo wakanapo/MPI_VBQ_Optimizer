@@ -14,14 +14,17 @@ import numpy as np
 import tensorflow as tf
 import logging
 from selector import data_selector, model_selector
-from converter import converter
+from converter import converter, quantize
+from imagenet import AlexNet
+import gc
+from keras import Model
+from keras.layers import Lambda
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 val_X = []
 val_y = []
 g_W = []
 
-# Logging設定
 fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(filename='data/python_server_log.txt', filemode='w',
                     format=fmt, level=logging.DEBUG)
@@ -29,24 +32,55 @@ logger = logging.getLogger('Main')
 
 def calculate_fitness(genoms, model_name, quantize_layer):
     try:
-        with K.get_session().graph.as_default():
-            model = model_selector(model_name)
-            W_q = copy.deepcopy(g_W)
+        if model_name == 'alexnet':
+            W_q = np.load(open("data/bvlc_alexnet.npy", "rb"), encoding="latin1").item()
             if len(genoms.genom) > 1:
-                W_q[::2] = [converter(genoms.genom[i].gene)(W_q[i*2]) for i in range(len(W_q)//2)]
+                for i in range(8):
+                    W_q[AlexNet.layers[i]][0] = converter(genoms.genom[i].gene)(W_q[AlexNet.layers[i]][0])
             elif quantize_layer == -1:
-                W_q[::2] = list(map(converter(genoms.genom[0].gene), W_q[::2]))
+                for i in range(8):
+                    W_q[AlexNet.layers[i]][0] = converter(genoms.genom[0].gene)(W_q[AlexNet.layers[i]][0])
             elif quantize_layer >= 0 and quantize_layer*2 < len(W_q):
-                W_q[quantize_layer*2] = converter(genoms.genom[0].gene)(W_q[quantize_layer*2])
+                W_q[AlexNet.layers[quantize_layer]][0] = converter(genoms.genom[0].gene)(W_q[AlexNet.layers[quantize_layer]][0])
             else:
                 sys.exit("quantize_layer is out of index.")
-            model.set_weights(W_q)
-            model.compile(optimizer=optimizers.Adam(),
-                          loss='categorical_crossentropy',
-                          metrics=['accuracy'])
-            score = model.evaluate(val_X, val_y, verbose=0)
-        K.clear_session()
-        return score[1]
+            accuracy = AlexNet.alexnet(W_q, val_X, val_y)
+            gc.collect()
+            return accuracy
+        else:
+            with K.get_session().graph.as_default():
+                model = model_selector(model_name)
+#                 W_q = copy.deepcopy(g_W)
+#                 if len(genoms.genom) > 1:
+#                     W_q[::2] = [converter(genoms.genom[i].gene)(W_q[i*2]) for i in range(len(W_q)//2)]
+#                 elif quantize_layer == -1:
+#                     W_q[::2] = list(map(converter(genoms.genom[0].gene), W_q[::2]))
+#                 elif quantize_layer >= 0 and quantize_layer*2 < len(W_q):
+#                     W_q[quantize_layer*2] = converter(genoms.genom[0].gene)(W_q[quantize_layer*2])
+#                 else:
+#                     sys.exit("quantize_layer is out of index.")
+#                 model.set_weights(W_q)
+                layers = [l for l in model.layers]
+                layer_ids = [1, 2, 4, 5, 7, 8, 9, 11, 12, 13, 15, 16, 17, 20, 21, 22]
+                x = layers[0].output
+                j = 0
+                for i in range(1, len(layers)):
+                    if quantize_layer == -1:
+                        if i in layer_ids:
+                            x = Lambda(quantize(genoms.genom[j].gene))(x)
+                            j += 1
+                    else:
+                        if i == layer_ids[quantize_layer]:
+                            x = Lambda(quantize(genoms.genom[0].gene))(x)
+                    x = layers[i](x)
+                model = Model(input=layers[0].input, output=x)
+                model.set_weights(g_W)
+                model.compile(optimizer=optimizers.Adam(),
+                              loss='categorical_crossentropy',
+                              metrics=['accuracy'])
+                score = model.evaluate(val_X, val_y, verbose=0)
+            K.clear_session()
+            return score[1]
     except:
         logger.exception(sys.exc_info()[0])
         return -1
@@ -65,12 +99,14 @@ class GenomEvaluationServicer(genom_pb2_grpc.GenomEvaluationServicer):
     def GetIndividualMock(self, request, context):
         return genom_pb2.Individual(genoms=request, evaluation=0.5)
 
+
 def server(model_name, quantize_layer, rank):
     global val_X, val_y, g_W
     val_X, val_y = data_selector(model_name)
     logger.debug("data load: success.")
-    model = model_selector(model_name, weights=True)
-    g_W = model.get_weights()
+    if model_name != "alexnet":
+        model = model_selector(model_name, weights=True)
+        g_W = model.get_weights()
     logger.debug("model load: success.")
     server = grpc.server(futures.ThreadPoolExecutor())
     genom_pb2_grpc.add_GenomEvaluationServicer_to_server(
